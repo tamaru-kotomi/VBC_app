@@ -24,6 +24,7 @@ app/
 components/          # 再利用可能なUI部品（Calendar, Forms等）
 lib/                 # 共通ロジック（Prisma設定, Auth設定, バリデーション）
 prisma/              # DBスキーマ定義
+```
 
 ## 🗄️ データ設計概要
 ### User (ユーザー)
