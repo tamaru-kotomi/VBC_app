@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   format,
   addMonths,
@@ -15,10 +15,9 @@ import {
   isBefore,
   isAfter,
 } from "date-fns";
-import { ja } from "date-fns/locale";
 import Image from "next/image";
+import Header from "../components/Header";
 
-// Prismaのモデルに合わせて target を定義
 interface Schedule {
   id: string;
   title: string;
@@ -59,18 +58,25 @@ export default function Calendar({
   const nextMonth = () =>
     canGoNext && setCurrentMonth(addMonths(currentMonth, 1));
 
+  // 曜日の色を取得する関数
+  const getDayColor = (date: Date) => {
+    const dayEn = format(date, "EEE").toUpperCase(); // "SAT", "SUN" 等
+    if (dayEn === "SUN") return "#C20000";
+    if (dayEn === "SAT") return "#5343CD";
+    return "#090C26";
+  };
+
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
-      {/* 1. 年月ナビゲーション (下付き配置) */}
+      {/* 1. 年月ナビゲーション */}
       <div className="flex items-end justify-between mb-6 w-full">
-        {/* 前月ボタン */}
         <button
           onClick={prevMonth}
           disabled={!canGoPrev}
           className={`flex items-end text-[20px] font-bold transition-colors leading-none ${
             !canGoPrev ? "cursor-not-allowed" : "hover:opacity-60"
           }`}
-          style={{ color: canGoPrev ? "#090C26" : "#D9D9D9" }}
+          style={{ color: canGoPrev ? "#090C26" : "#999999" }}
         >
           <div className="relative w-[18px] h-[18px] mr-[4px] mb-[2px]">
             <Image
@@ -82,25 +88,22 @@ export default function Calendar({
               alt="前月"
               width={18}
               height={18}
-              style={{ objectFit: "contain" }}
             />
           </div>
           前月
         </button>
 
-        {/* 当月表示 (36px, YYYY/MM) */}
         <h2 className="text-[36px] font-bold tracking-tighter leading-none text-[#090C26]">
           {format(currentMonth, "yyyy/MM")}
         </h2>
 
-        {/* 次月ボタン */}
         <button
           onClick={nextMonth}
           disabled={!canGoNext}
           className={`flex items-end text-[20px] font-bold transition-colors leading-none ${
             !canGoNext ? "cursor-not-allowed" : "hover:opacity-60"
           }`}
-          style={{ color: canGoNext ? "#090C26" : "#D9D9D9" }}
+          style={{ color: canGoNext ? "#090C26" : "#999999" }}
         >
           次月
           <div className="relative w-[18px] h-[18px] ml-[4px] mb-[2px]">
@@ -113,19 +116,17 @@ export default function Calendar({
               alt="次月"
               width={18}
               height={18}
-              style={{ objectFit: "contain" }}
             />
           </div>
         </button>
       </div>
 
-      {/* 2. 曜日ヘッダー (MON始まり / 色分け) */}
+      {/* 2. 曜日ヘッダー */}
       <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold leading-none">
         {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => {
           let textColor = "#090C26";
           if (day === "SUN") textColor = "#C20000";
           if (day === "SAT") textColor = "#5343CD";
-
           return (
             <div key={day} style={{ color: textColor }}>
               {day}
@@ -134,7 +135,7 @@ export default function Calendar({
         })}
       </div>
 
-      {/* 3. カレンダーグリッド (枠線: #9D9D9D) */}
+      {/* 3. カレンダーグリッド */}
       <div className="border-[2px] border-[#9D9D9D] bg-[#9D9D9D] grid grid-cols-7 gap-[1px] overflow-hidden rounded-[2px]">
         {calendarDays.map((day) => {
           const daySchedules = initialSchedules.filter((s) =>
@@ -148,17 +149,13 @@ export default function Calendar({
               onClick={() => setSelectedDay(day)}
               className="relative h-[142px] bg-white cursor-pointer hover:bg-slate-50 transition-colors"
             >
-              {/* 日付: 16px, 左4px, 上4px */}
               <span
-                className={`
-                  absolute left-[4px] top-[4px] text-[16px] font-bold leading-none
-                  ${!isCurrentMonth ? "text-[#9D9D9D]" : "text-[#090C26]"}
-                `}
+                className={`absolute left-[4px] top-[4px] text-[16px] font-bold leading-none ${
+                  !isCurrentMonth ? "text-[#9D9D9D]" : "text-[#090C26]"
+                }`}
               >
                 {format(day, "d")}
               </span>
-
-              {/* カテゴリーラベル表示エリア (targetを使用) */}
               <div className="mt-[24px] flex flex-col gap-[2px] px-[2px]">
                 {daySchedules.map((item) => (
                   <div
@@ -176,29 +173,36 @@ export default function Calendar({
 
       {/* 4. 詳細スライドイン (100vh) */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-[110] bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.15)] transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] ${
+        className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] ${
           selectedDay ? "translate-y-0" : "translate-y-full"
         }`}
-        style={{ height: "100vh" }}
       >
-        <div className="p-6">
+        <Header
+          showClose={true}
+          onClose={() => setSelectedDay(null)}
+          title="詳細"
+        />
+
+        <main className="py-[36px] px-[16px] overflow-y-auto">
           {selectedDay && (
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-[22px] font-bold">
-                {format(selectedDay, "M/d", { locale: ja })}
-                <span className="text-[16px] ml-2">
-                  ({format(selectedDay, "E", { locale: ja })})
+            <div className="flex flex-col items-center">
+              {/* 日付表示: カッコは全角・色は#090C26固定 */}
+              <h3 className="text-[36px] font-bold tracking-tighter leading-none mb-[24px] text-[#090C26]">
+                {format(selectedDay, "yyyy/MM/dd")}
+                <span>（</span>
+                <span style={{ color: getDayColor(selectedDay) }}>
+                  {format(selectedDay, "EEE").toUpperCase()}
                 </span>
+                <span>）</span>
               </h3>
-              <button
-                onClick={() => setSelectedDay(null)}
-                className="text-[14px] font-bold text-[#9D9D9D]"
-              >
-                閉じる
-              </button>
+
+              {/* コンテンツエリア */}
+              <div className="w-full px-[16px]">
+                {/* 予定リストをここに実装 */}
+              </div>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

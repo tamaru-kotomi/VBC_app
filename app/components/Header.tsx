@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import CustomInput from "./CustomInput";
 import Button from "./Button";
 
@@ -10,17 +9,16 @@ interface HeaderProps {
   title?: string;
   showClose?: boolean;
   showGear?: boolean;
+  onClose?: () => void;
 }
 
 export default function Header({
   title,
   showClose = false,
   showGear = false,
+  onClose,
 }: HeaderProps) {
-  // 1. 状態管理（フィルターの開閉状態）
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  // 現在表示・選択されている状態（UIに反映される値）
   const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({
     ALL: true,
     boys: true,
@@ -30,16 +28,12 @@ export default function Header({
     girlsA: true,
     girlsB: true,
   });
-
-  // 2. 開いた瞬間の値を一時保存するためのState
   const [backupCheckedItems, setBackupCheckedItems] = useState<{
     [key: string]: boolean;
   } | null>(null);
 
-  // 3. 状態の派生（一つでもチェックがあればtrue）
   const hasSelection = Object.values(checkedItems).some((val) => val === true);
 
-  // 4. 選択肢の定義データ
   const filterOptions = [
     {
       id: "ALL",
@@ -99,75 +93,69 @@ export default function Header({
     },
   ];
 
-  // チェックボックス操作時（リアルタイムにUIへ反映）
   const handleCheckboxChange = (id: string, isChecked: boolean) => {
     setCheckedItems((prev) => ({ ...prev, [id]: isChecked }));
   };
 
-  // ギアマーククリック時
   const handleGearClick = () => {
     if (!isFilterOpen) {
-      // 【開く時】現在の状態をバックアップに保存
       setBackupCheckedItems({ ...checkedItems });
       setIsFilterOpen(true);
     } else {
-      // 【閉じる時（ギアクリック）】バックアップがあればその値に戻して閉じる
-      if (backupCheckedItems) {
-        setCheckedItems(backupCheckedItems);
-      }
+      if (backupCheckedItems) setCheckedItems(backupCheckedItems);
       setIsFilterOpen(false);
     }
   };
 
-  // FILTERボタン（適用）
   const filterfunction = () => {
     setIsFilterOpen(false);
-    // バックアップは不要になるのでクリア（任意）
     setBackupCheckedItems(null);
   };
-
-  // CANCELボタン
   const cancelFilter = () => {
-    // 【キャンセル時】開いた時のバックアップ値に戻す
-    if (backupCheckedItems) {
-      setCheckedItems(backupCheckedItems);
-    }
+    if (backupCheckedItems) setCheckedItems(backupCheckedItems);
+    setIsFilterOpen(false);
+  };
+  const handleOverlayClick = () => {
+    if (backupCheckedItems) setCheckedItems(backupCheckedItems);
     setIsFilterOpen(false);
   };
 
-  // 背景オーバーレイクリック時（キャンセルと同様の動き）
-  const handleOverlayClick = () => {
-    if (backupCheckedItems) {
-      setCheckedItems(backupCheckedItems);
-    }
-    setIsFilterOpen(false);
-  };
+  const isDetailMode = showClose && title;
 
   return (
     <>
       <header className="relative w-full z-[100] leading-tight">
-        <div className="relative w-full h-[120px] bg-[#090C26] flex items-center px-4">
+        <div className="relative w-full h-[120px] bg-[#090C26] overflow-hidden">
+          {/* クローズボタン: 右上 (右16px, 上28px) */}
           {showClose && (
-            <Link
-              href="/calendar"
-              className="absolute left-4 top-4 w-[44px] h-[44px] hover:opacity-70"
+            <button
+              onClick={onClose}
+              className="absolute right-[16px] top-[28px] w-[44px] h-[44px] hover:opacity-70 z-[110]"
             >
               <Image
-                src="/images/icons/icon_cancel.png"
+                src="/images/icons/icon_close_white.png"
                 alt="Close"
                 width={44}
                 height={44}
               />
-            </Link>
+            </button>
           )}
 
+          {/* タイトル表示 */}
           {title && (
-            <h1 className="w-full text-center text-white text-xl font-bold tracking-wider">
+            <h1
+              className={`text-white font-bold leading-none tracking-wider absolute ${
+                isDetailMode
+                  ? "left-[16px] bottom-[16px] text-[40px]"
+                  : "w-full text-center top-1/2 -translate-y-1/2 text-xl"
+              }`}
+            >
               {title}
             </h1>
           )}
 
-          {showGear && (
+          {/* ギアマーク */}
+          {showGear && !isDetailMode && (
             <button
               onClick={handleGearClick}
               className="absolute right-4 bottom-4 w-[44px] h-[44px] hover:opacity-80 focus:outline-none"
@@ -182,11 +170,11 @@ export default function Header({
           )}
         </div>
 
+        {/* フィルタードロップダウン */}
         <div
-          className={`
-            absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100]
-            ${isFilterOpen ? "h-[566px]" : "h-0"}
-          `}
+          className={`absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100] ${
+            isFilterOpen ? "h-[566px]" : "h-0"
+          }`}
         >
           <div className="mx-[16px] my-[36px] bg-[#fff] rounded-[4px] h-[calc(566px-72px)] overflow-y-auto shadow-xl">
             <div className="text-[#090C26] py-[36px]">
@@ -198,6 +186,7 @@ export default function Header({
               <p className="text-[14px] mt-[4px] text-center">※複数設定可能</p>
 
               <div className="flex justify-center w-full px-[8px] mt-[20px]">
+                {/* グリッドレイアウトの修正 */}
                 <div className="grid grid-cols-[repeat(3,min-content)] w-full max-w-[375px] justify-center gap-x-[clamp(8px,4vw,16px)] gap-y-[12px]">
                   {filterOptions.map((option, index) => {
                     const inputElement = (
@@ -218,6 +207,7 @@ export default function Header({
                           <div className="col-start-1 w-fit h-fit">
                             {inputElement}
                           </div>
+                          {/* 1行目の残りを空ける */}
                           <div className="col-start-2"></div>
                           <div className="col-start-3"></div>
                         </React.Fragment>
