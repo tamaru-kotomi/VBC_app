@@ -15,6 +15,9 @@ import Button from "../../components/Button";
 import { FormItem } from "../../components/FormItem";
 import { CommonInput } from "../../components/CommonInput";
 import { SelectBox } from "../../components/SelectBox";
+import { Modal } from "../../components/Modal";
+import { TargetLabel } from "../../components/TargetLabel";
+import { DetailTable } from "../../components/DetailTable"; // コンポーネントをインポート
 
 interface TargetOption {
   id: string;
@@ -30,12 +33,10 @@ export default function CreateSchedulePage() {
   const searchParams = useSearchParams();
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
-  // パラメータ取得
   const queryDate = searchParams.get("date");
   const isNew = searchParams.get("isNew") === "true";
   const defaultDate = queryDate ? new Date(queryDate) : new Date();
 
-  // ステート管理
   const [year, setYear] = useState(defaultDate.getFullYear().toString());
   const [month, setMonth] = useState(
     (defaultDate.getMonth() + 1).toString().padStart(2, "0")
@@ -53,7 +54,8 @@ export default function CreateSchedulePage() {
   const [target, setTarget] = useState("ALL");
   const [content, setContent] = useState("");
 
-  // 日付の選択肢計算
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const daysOptions = useMemo(() => {
     const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
     return Array.from({ length: lastDay }, (_, i) =>
@@ -61,33 +63,43 @@ export default function CreateSchedulePage() {
     );
   }, [year, month]);
 
-  // CHECKボタン押下時の処理
   const handleCheck = () => {
     if (isNew) {
       const selectedDate = startOfDay(
         new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
       );
       const today = startOfDay(new Date());
-
       if (isBefore(selectedDate, today)) {
         setError("※過去の日付を指定することはできません");
         setIsErrorBg(true);
-
         if (queryDate) {
           const d = parseISO(queryDate);
           setYear(d.getFullYear().toString());
           setMonth((d.getMonth() + 1).toString().padStart(2, "0"));
           setDay(d.getDate().toString().padStart(2, "0"));
         }
-
         window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
     }
-    console.log("Check Success");
+    setIsModalOpen(true);
   };
 
-  // textarea高さ自動調整
+  const handleRegister = () => {
+    console.log("DB登録:", {
+      year,
+      month,
+      day,
+      title,
+      time,
+      location,
+      otherLocation,
+      target,
+      content,
+    });
+    setIsModalOpen(false);
+  };
+
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.style.height = "240px";
@@ -97,7 +109,6 @@ export default function CreateSchedulePage() {
     }
   }, [content]);
 
-  // 各種選択肢
   const years = [
     new Date().getFullYear().toString(),
     (new Date().getFullYear() + 1).toString(),
@@ -105,6 +116,7 @@ export default function CreateSchedulePage() {
   const months = Array.from({ length: 12 }, (_, i) =>
     (i + 1).toString().padStart(2, "0")
   );
+
   const targetOptions: TargetOption[] = [
     { id: "ALL", name: "ALL", value: "0", selectedColor: "#8BC34A" },
     { id: "boys", name: "男子", value: "1", selectedColor: "#3C2465" },
@@ -139,6 +151,7 @@ export default function CreateSchedulePage() {
       </div>
       <div className="w-full max-w-[375px]">
         <main className="px-[16px] py-[36px] flex flex-col gap-[36px]">
+          {/* 日付項目 */}
           <FormItem label="日付" required error={error}>
             <div className="flex items-end gap-[4px]">
               <SelectBox
@@ -180,6 +193,7 @@ export default function CreateSchedulePage() {
             </div>
           </FormItem>
 
+          {/* タイトル項目 */}
           <FormItem label="タイトル" required>
             <CommonInput
               placeholder="タイトルを入力してください"
@@ -191,6 +205,7 @@ export default function CreateSchedulePage() {
             />
           </FormItem>
 
+          {/* 時間項目 */}
           <FormItem label="時間">
             <select
               className={`w-full border border-[#9D9D9D] px-[8px] text-[20px] rounded-[4px] h-[52px] appearance-none bg-white bg-no-repeat bg-[right_8px_center] bg-[length:16px_16px] focus:outline-none focus:border-[2px] focus:border-[#090C26] ${getTextColor(
@@ -221,6 +236,7 @@ export default function CreateSchedulePage() {
             </select>
           </FormItem>
 
+          {/* 場所項目 */}
           <FormItem label="場所">
             <div className="flex flex-col gap-[12px]">
               <select
@@ -265,6 +281,7 @@ export default function CreateSchedulePage() {
             </div>
           </FormItem>
 
+          {/* 対象項目 */}
           <FormItem label="対象" required>
             <div className="grid grid-cols-3 w-full gap-y-[12px] gap-x-[8px] justify-items-center">
               {targetOptions.map((option, index) => (
@@ -289,6 +306,7 @@ export default function CreateSchedulePage() {
             </div>
           </FormItem>
 
+          {/* 内容項目 */}
           <FormItem label="内容・連絡事項">
             <textarea
               ref={contentRef}
@@ -303,6 +321,7 @@ export default function CreateSchedulePage() {
             />
           </FormItem>
 
+          {/* ボタンエリア */}
           <div className="flex flex-col items-center mt-[12px] gap-[24px]">
             <Button
               label="CHECK"
@@ -321,6 +340,44 @@ export default function CreateSchedulePage() {
           </div>
         </main>
       </div>
+
+      {/* プレビューモーダル */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        buttons={
+          <Button
+            label="ADD"
+            activeBgColor="#090C26"
+            onClick={handleRegister}
+          />
+        }
+      >
+        <div className="flex flex-col">
+          {/* 対象ラベル（左寄せ） */}
+          <div className="w-full flex justify-start mb-[18px]">
+            <TargetLabel targetId={target} />
+          </div>
+
+          {/* 共通コンポーネント化した詳細テーブル */}
+          <DetailTable
+            targetId={target}
+            items={[
+              { label: "日付", value: `${year}/${month}/${day}` },
+              { label: "タイトル", value: title },
+              { label: "時間", value: time || "指定なし" },
+              {
+                label: "場所",
+                value:
+                  location === "その他"
+                    ? otherLocation
+                    : location || "指定なし",
+              },
+              { label: "内容・連絡事項", value: content || "なし" },
+            ]}
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -18,7 +18,6 @@ export default function Header({
   showGear = false,
   onClose,
 }: HeaderProps) {
-  // 1. フィルターの状態管理
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({
     ALL: true,
@@ -123,34 +122,20 @@ export default function Header({
 
   return (
     <>
-      {/* showCloseがある場合（詳細画面など）はスクロール追従のためstickyに */}
       <header
         className={`${
           showClose ? "sticky top-0" : "relative"
         } w-full z-[100] leading-tight`}
       >
         <div className="relative w-full h-[120px] bg-[#090C26] overflow-hidden">
-          {/* 1. タイトル：左下 (左16px, 下16px) / 36px / Bold */}
-          {title ? (
+          {/* タイトルがある場合のみ表示。ない場合は空欄 */}
+          {title && (
             <h1 className="absolute left-[16px] bottom-[16px] text-white text-[36px] font-bold tracking-wider leading-none">
               {title}
             </h1>
-          ) : (
-            /* タイトルがない場合は中央にロゴを表示 */
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-[120px] h-[30px]">
-                <Image
-                  src="/images/logo.png"
-                  alt="Logo"
-                  fill
-                  style={{ objectFit: "contain" }}
-                  priority
-                />
-              </div>
-            </div>
           )}
 
-          {/* 2. クローズボタン：右上 (右16px, 上28px) */}
+          {/* クローズボタン */}
           {showClose && (
             <button
               onClick={onClose}
@@ -165,8 +150,8 @@ export default function Header({
             </button>
           )}
 
-          {/* 3. ギアマーク：ロゴ表示時（titleがない時）のみ許可 */}
-          {showGear && !title && (
+          {/* ギアマーク */}
+          {showGear && (
             <button
               onClick={handleGearClick}
               className="absolute right-4 bottom-4 w-[44px] h-[44px] hover:opacity-80 focus:outline-none"
@@ -181,12 +166,11 @@ export default function Header({
           )}
         </div>
 
-        {/* 4. フィルタードロップダウン（通常画面用） */}
+        {/* フィルタードロップダウン */}
         <div
-          className={`
-            absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100]
-            ${isFilterOpen ? "h-[566px]" : "h-0"}
-          `}
+          className={`absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100] ${
+            isFilterOpen ? "h-[566px]" : "h-0"
+          }`}
         >
           <div className="mx-[16px] my-[36px] bg-[#fff] rounded-[4px] h-[calc(566px-72px)] overflow-y-auto shadow-xl">
             <div className="text-[#090C26] py-[36px]">
@@ -196,7 +180,6 @@ export default function Header({
                 カテゴリーを選択してください。
               </p>
               <p className="text-[14px] mt-[4px] text-center">※複数設定可能</p>
-
               <div className="flex justify-center w-full px-[8px] mt-[20px]">
                 <div className="grid grid-cols-[repeat(3,min-content)] w-full max-w-[375px] justify-center gap-x-[clamp(8px,4vw,16px)] gap-y-[12px]">
                   {filterOptions.map((option, index) => {
@@ -230,7 +213,6 @@ export default function Header({
                   })}
                 </div>
               </div>
-
               <div className="flex flex-col items-center mt-10 space-y-[12px]">
                 <Button
                   label="FILTER"
@@ -241,7 +223,6 @@ export default function Header({
                 <Button
                   label="CANCEL"
                   onClick={cancelFilter}
-                  disabled={false}
                   activeBgColor="#143875"
                 />
               </div>
