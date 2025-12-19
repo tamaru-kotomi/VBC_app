@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   format,
   addMonths,
@@ -30,6 +31,7 @@ export default function Calendar({
 }: {
   initialSchedules: Schedule[];
 }) {
+  const router = useRouter();
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -64,6 +66,15 @@ export default function Calendar({
     if (dayEn === "SUN") return "#C20000";
     if (dayEn === "SAT") return "#5343CD";
     return "#090C26";
+  };
+
+  // 登録画面へ遷移する関数
+  const handleAddSchedule = () => {
+    if (selectedDay) {
+      // 日付を YYYY-MM-DD 形式でパラメータとして渡す
+      const dateStr = format(selectedDay, "yyyy-MM-dd");
+      router.push(`/calendar/create?date=${dateStr}`);
+    }
   };
 
   return (
@@ -183,10 +194,10 @@ export default function Calendar({
           title="詳細"
         />
 
-        <main className="py-[36px] px-[16px] overflow-y-auto">
+        <main className="py-[36px] px-[16px] h-[calc(100vh-120px)] overflow-y-auto relative">
           {selectedDay && (
             <div className="flex flex-col items-center">
-              {/* 日付表示: カッコは全角・色は#090C26固定 */}
+              {/* 日付表示 */}
               <h3 className="text-[36px] font-bold tracking-tighter leading-none mb-[24px] text-[#090C26]">
                 {format(selectedDay, "yyyy/MM/dd")}
                 <span>（</span>
@@ -198,8 +209,22 @@ export default function Calendar({
 
               {/* コンテンツエリア */}
               <div className="w-full px-[16px]">
-                {/* 予定リストをここに実装 */}
+                {/* 予定リスト表示エリア */}
               </div>
+
+              {/* 追従プラスアイコン: 右16px, 下36px */}
+              {/* mainの中に置くことでスライドイン内でのみ追従させます */}
+              <button
+                onClick={handleAddSchedule}
+                className="fixed right-[16px] bottom-[36px] w-[60px] h-[60px] hover:opacity-80 transition-opacity drop-shadow-lg"
+              >
+                <Image
+                  src="/images/icons/icon_plus.png"
+                  alt="予定を追加"
+                  width={60}
+                  height={60}
+                />
+              </button>
             </div>
           )}
         </main>

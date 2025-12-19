@@ -124,7 +124,12 @@ export default function Header({
 
   return (
     <>
-      <header className="relative w-full z-[100] leading-tight">
+      {/* isDetailMode の時だけ sticky top-0 で固定 */}
+      <header
+        className={`${
+          isDetailMode ? "sticky top-0" : "relative"
+        } w-full z-[100] leading-tight`}
+      >
         <div className="relative w-full h-[120px] bg-[#090C26] overflow-hidden">
           {/* クローズボタン: 右上 (右16px, 上28px) */}
           {showClose && (
@@ -170,7 +175,7 @@ export default function Header({
           )}
         </div>
 
-        {/* フィルタードロップダウン */}
+        {/* フィルタードロップダウン（通常時用） */}
         <div
           className={`absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100] ${
             isFilterOpen ? "h-[566px]" : "h-0"
@@ -186,7 +191,6 @@ export default function Header({
               <p className="text-[14px] mt-[4px] text-center">※複数設定可能</p>
 
               <div className="flex justify-center w-full px-[8px] mt-[20px]">
-                {/* グリッドレイアウトの修正 */}
                 <div className="grid grid-cols-[repeat(3,min-content)] w-full max-w-[375px] justify-center gap-x-[clamp(8px,4vw,16px)] gap-y-[12px]">
                   {filterOptions.map((option, index) => {
                     const inputElement = (
@@ -207,7 +211,6 @@ export default function Header({
                           <div className="col-start-1 w-fit h-fit">
                             {inputElement}
                           </div>
-                          {/* 1行目の残りを空ける */}
                           <div className="col-start-2"></div>
                           <div className="col-start-3"></div>
                         </React.Fragment>
