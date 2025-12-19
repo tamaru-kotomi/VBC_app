@@ -233,7 +233,7 @@ export default function Header({
 
       {isFilterOpen && (
         <div
-          className="fixed inset-0 bg-[#9D9D9D]/50 z-[90]"
+          className="fixed inset-0 bg-[#999999]/80 z-[90]"
           onClick={handleOverlayClick}
         />
       )}
