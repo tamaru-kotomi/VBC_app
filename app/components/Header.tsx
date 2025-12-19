@@ -6,10 +6,10 @@ import CustomInput from "./CustomInput";
 import Button from "./Button";
 
 interface HeaderProps {
-  title?: string;
-  showClose?: boolean;
-  showGear?: boolean;
-  onClose?: () => void;
+  title?: string; // 画面タイトル（例：「詳細」「スケジュール登録」）
+  showClose?: boolean; // クローズボタン（×）を表示するか
+  showGear?: boolean; // ギアアイコンを表示するか（トップ用）
+  onClose?: () => void; // クローズボタン押下時の処理
 }
 
 export default function Header({
@@ -18,6 +18,7 @@ export default function Header({
   showGear = false,
   onClose,
 }: HeaderProps) {
+  // 1. フィルターの状態管理
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({
     ALL: true,
@@ -120,18 +121,36 @@ export default function Header({
     setIsFilterOpen(false);
   };
 
-  const isDetailMode = showClose && title;
-
   return (
     <>
-      {/* isDetailMode の時だけ sticky top-0 で固定 */}
+      {/* showCloseがある場合（詳細画面など）はスクロール追従のためstickyに */}
       <header
         className={`${
-          isDetailMode ? "sticky top-0" : "relative"
+          showClose ? "sticky top-0" : "relative"
         } w-full z-[100] leading-tight`}
       >
         <div className="relative w-full h-[120px] bg-[#090C26] overflow-hidden">
-          {/* クローズボタン: 右上 (右16px, 上28px) */}
+          {/* 1. タイトル：左下 (左16px, 下16px) / 36px / Bold */}
+          {title ? (
+            <h1 className="absolute left-[16px] bottom-[16px] text-white text-[36px] font-bold tracking-wider leading-none">
+              {title}
+            </h1>
+          ) : (
+            /* タイトルがない場合は中央にロゴを表示 */
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-[120px] h-[30px]">
+                <Image
+                  src="/images/logo.png"
+                  alt="Logo"
+                  fill
+                  style={{ objectFit: "contain" }}
+                  priority
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 2. クローズボタン：右上 (右16px, 上28px) */}
           {showClose && (
             <button
               onClick={onClose}
@@ -146,21 +165,8 @@ export default function Header({
             </button>
           )}
 
-          {/* タイトル表示 */}
-          {title && (
-            <h1
-              className={`text-white font-bold leading-none tracking-wider absolute ${
-                isDetailMode
-                  ? "left-[16px] bottom-[16px] text-[40px]"
-                  : "w-full text-center top-1/2 -translate-y-1/2 text-xl"
-              }`}
-            >
-              {title}
-            </h1>
-          )}
-
-          {/* ギアマーク */}
-          {showGear && !isDetailMode && (
+          {/* 3. ギアマーク：ロゴ表示時（titleがない時）のみ許可 */}
+          {showGear && !title && (
             <button
               onClick={handleGearClick}
               className="absolute right-4 bottom-4 w-[44px] h-[44px] hover:opacity-80 focus:outline-none"
@@ -175,11 +181,12 @@ export default function Header({
           )}
         </div>
 
-        {/* フィルタードロップダウン（通常時用） */}
+        {/* 4. フィルタードロップダウン（通常画面用） */}
         <div
-          className={`absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100] ${
-            isFilterOpen ? "h-[566px]" : "h-0"
-          }`}
+          className={`
+            absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100]
+            ${isFilterOpen ? "h-[566px]" : "h-0"}
+          `}
         >
           <div className="mx-[16px] my-[36px] bg-[#fff] rounded-[4px] h-[calc(566px-72px)] overflow-y-auto shadow-xl">
             <div className="text-[#090C26] py-[36px]">
@@ -204,7 +211,6 @@ export default function Header({
                         }
                       />
                     );
-
                     if (index === 0) {
                       return (
                         <React.Fragment key={option.id}>

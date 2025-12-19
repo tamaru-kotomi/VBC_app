@@ -71,9 +71,8 @@ export default function Calendar({
   // 登録画面へ遷移する関数
   const handleAddSchedule = () => {
     if (selectedDay) {
-      // 日付を YYYY-MM-DD 形式でパラメータとして渡す
       const dateStr = format(selectedDay, "yyyy-MM-dd");
-      router.push(`/calendar/create?date=${dateStr}`);
+      router.push(`/calendar/create?date=${dateStr}&isNew=true`);
     }
   };
 
