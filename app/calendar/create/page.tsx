@@ -8,7 +8,7 @@ import React, {
   ChangeEvent,
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { isBefore, startOfDay, parseISO } from "date-fns";
+import { isBefore, startOfDay } from "date-fns";
 import Header from "../../components/Header";
 import CustomInput from "../../components/CustomInput";
 import Button from "../../components/Button";
@@ -17,7 +17,7 @@ import { CommonInput } from "../../components/CommonInput";
 import { SelectBox } from "../../components/SelectBox";
 import { Modal } from "../../components/Modal";
 import { TargetLabel } from "../../components/TargetLabel";
-import { DetailTable } from "../../components/DetailTable"; // コンポーネントをインポート
+import { DetailTable } from "../../components/DetailTable";
 
 interface TargetOption {
   id: string;
@@ -55,6 +55,7 @@ export default function CreateSchedulePage() {
   const [content, setContent] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const daysOptions = useMemo(() => {
     const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
@@ -72,12 +73,6 @@ export default function CreateSchedulePage() {
       if (isBefore(selectedDate, today)) {
         setError("※過去の日付を指定することはできません");
         setIsErrorBg(true);
-        if (queryDate) {
-          const d = parseISO(queryDate);
-          setYear(d.getFullYear().toString());
-          setMonth((d.getMonth() + 1).toString().padStart(2, "0"));
-          setDay(d.getDate().toString().padStart(2, "0"));
-        }
         window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
@@ -149,9 +144,9 @@ export default function CreateSchedulePage() {
       <div className="w-full">
         <Header title="スケジュール登録" showClose={false} />
       </div>
+
       <div className="w-full max-w-[375px]">
         <main className="px-[16px] py-[36px] flex flex-col gap-[36px]">
-          {/* 日付項目 */}
           <FormItem label="日付" required error={error}>
             <div className="flex items-end gap-[4px]">
               <SelectBox
@@ -193,7 +188,6 @@ export default function CreateSchedulePage() {
             </div>
           </FormItem>
 
-          {/* タイトル項目 */}
           <FormItem label="タイトル" required>
             <CommonInput
               placeholder="タイトルを入力してください"
@@ -205,7 +199,6 @@ export default function CreateSchedulePage() {
             />
           </FormItem>
 
-          {/* 時間項目 */}
           <FormItem label="時間">
             <select
               className={`w-full border border-[#9D9D9D] px-[8px] text-[20px] rounded-[4px] h-[52px] appearance-none bg-white bg-no-repeat bg-[right_8px_center] bg-[length:16px_16px] focus:outline-none focus:border-[2px] focus:border-[#090C26] ${getTextColor(
@@ -236,7 +229,6 @@ export default function CreateSchedulePage() {
             </select>
           </FormItem>
 
-          {/* 場所項目 */}
           <FormItem label="場所">
             <div className="flex flex-col gap-[12px]">
               <select
@@ -281,7 +273,6 @@ export default function CreateSchedulePage() {
             </div>
           </FormItem>
 
-          {/* 対象項目 */}
           <FormItem label="対象" required>
             <div className="grid grid-cols-3 w-full gap-y-[12px] gap-x-[8px] justify-items-center">
               {targetOptions.map((option, index) => (
@@ -306,7 +297,6 @@ export default function CreateSchedulePage() {
             </div>
           </FormItem>
 
-          {/* 内容項目 */}
           <FormItem label="内容・連絡事項">
             <textarea
               ref={contentRef}
@@ -321,7 +311,6 @@ export default function CreateSchedulePage() {
             />
           </FormItem>
 
-          {/* ボタンエリア */}
           <div className="flex flex-col items-center mt-[12px] gap-[24px]">
             <Button
               label="CHECK"
@@ -335,13 +324,13 @@ export default function CreateSchedulePage() {
             <Button
               label="CANCEL"
               activeBgColor="#143875"
-              onClick={() => router.back()}
+              onClick={() => setIsCancelModalOpen(true)}
             />
           </div>
         </main>
       </div>
 
-      {/* プレビューモーダル */}
+      {/* 1. プレビュー用モーダル */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -354,12 +343,9 @@ export default function CreateSchedulePage() {
         }
       >
         <div className="flex flex-col">
-          {/* 対象ラベル（左寄せ） */}
           <div className="w-full flex justify-start mb-[18px]">
             <TargetLabel targetId={target} />
           </div>
-
-          {/* 共通コンポーネント化した詳細テーブル */}
           <DetailTable
             targetId={target}
             items={[
@@ -376,6 +362,32 @@ export default function CreateSchedulePage() {
               { label: "内容・連絡事項", value: content || "なし" },
             ]}
           />
+        </div>
+      </Modal>
+
+      {/* 2. キャンセル確認用モーダル（修正ポイント） */}
+      <Modal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        buttons={
+          <div className="flex flex-row gap-[16px] justify-center w-full">
+            <Button
+              label="YES"
+              activeBgColor="#090C26"
+              onClick={() => router.back()}
+            />
+            <Button
+              label="NO"
+              activeBgColor="#143875"
+              onClick={() => setIsCancelModalOpen(false)}
+            />
+          </div>
+        }
+      >
+        <div className="py-[20px] text-center">
+          <p className="text-[16px] font-bold text-[#090C26] leading-tight whitespace-nowrap">
+            予定の追加・編集をキャンセルしますか？
+          </p>
         </div>
       </Modal>
     </div>
