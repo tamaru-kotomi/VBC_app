@@ -80,19 +80,36 @@ export default function CreateSchedulePage() {
     setIsModalOpen(true);
   };
 
-  const handleRegister = () => {
-    console.log("DB登録:", {
-      year,
-      month,
-      day,
-      title,
-      time,
-      location,
-      otherLocation,
-      target,
-      content,
-    });
-    setIsModalOpen(false);
+  const handleRegister = async () => {
+    try {
+      const response = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          year,
+          month,
+          day,
+          title,
+          time,
+          location,
+          otherLocation,
+          target, // ここで選んだ値（boysAなど）を送る
+          content,
+        }),
+      });
+
+      if (response.ok) {
+        // 成功したらカレンダーへ戻る
+        router.push("/calendar");
+        router.refresh(); // 最新のデータを取得し直す
+      } else {
+        const errorData = await response.json();
+        alert("保存に失敗しました: " + errorData.error);
+      }
+    } catch (error) {
+      console.error("通信エラー:", error);
+      alert("サーバーと通信できませんでした。");
+    }
   };
 
   useEffect(() => {
@@ -220,6 +237,7 @@ export default function CreateSchedulePage() {
                 "【AM】09:00 ~ 12:00",
                 "【PM】13:00 ~ 15:00",
                 "【PM】13:00 ~ 17:30",
+                "【PM】19:00 ~ 21:00",
                 "その他",
               ].map((opt) => (
                 <option key={opt} value={opt}>

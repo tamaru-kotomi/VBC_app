@@ -19,11 +19,25 @@ import {
 import Image from "next/image";
 import Header from "../components/Header";
 
+// デザイン定義（CustomInput.tsxと同じ配色）
+const targetStyles: Record<
+  string,
+  { bg: string; text: string; border: string; name: string }
+> = {
+  ALL: { bg: "#8BC34A", text: "#FFFFFF", border: "#8BC34A", name: "ALL" },
+  boys: { bg: "#3C2465", text: "#FFFFFF", border: "#3C2465", name: "男子" },
+  boysA: { bg: "#673AB7", text: "#FFFFFF", border: "#673AB7", name: "男子A" },
+  boysB: { bg: "#FFFFFF", text: "#673AB7", border: "#673AB7", name: "男子B" },
+  girls: { bg: "#811C1C", text: "#FFFFFF", border: "#811C1C", name: "女子" },
+  girlsA: { bg: "#D32F2F", text: "#FFFFFF", border: "#D32F2F", name: "女子A" },
+  girlsB: { bg: "#FFFFFF", text: "#D32F2F", border: "#D32F2F", name: "女子B" },
+};
+
 interface Schedule {
   id: string;
   title: string;
   date: Date | string;
-  target: string;
+  targetId: string;
 }
 
 export default function Calendar({
@@ -62,7 +76,7 @@ export default function Calendar({
 
   // 曜日の色を取得する関数
   const getDayColor = (date: Date) => {
-    const dayEn = format(date, "EEE").toUpperCase(); // "SAT", "SUN" 等
+    const dayEn = format(date, "EEE").toUpperCase();
     if (dayEn === "SUN") return "#C20000";
     if (dayEn === "SAT") return "#5343CD";
     return "#090C26";
@@ -79,7 +93,7 @@ export default function Calendar({
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
       {/* 1. 年月ナビゲーション */}
-      <div className="flex items-end justify-between mb-6 w-full">
+      <div className="flex items-end justify-between mb-6 w-full px-[8px]">
         <button
           onClick={prevMonth}
           disabled={!canGoPrev}
@@ -166,22 +180,40 @@ export default function Calendar({
               >
                 {format(day, "d")}
               </span>
-              <div className="mt-[24px] flex flex-col gap-[2px] px-[2px]">
-                {daySchedules.map((item) => (
-                  <div
-                    key={item.id}
-                    className="text-[10px] py-[1px] px-[4px] rounded-[2px] bg-[#090C26] text-white truncate"
-                  >
-                    {item.target}
-                  </div>
-                ))}
+
+              {/* ラベル表示エリア */}
+              <div className="mt-[24px] flex flex-col items-center gap-[0px]">
+                {daySchedules.map((item) => {
+                  const style = targetStyles[item.targetId] || targetStyles.ALL;
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-center border font-bold"
+                      style={{
+                        width: "44px",
+                        fontSize: "12px",
+                        borderRadius: "20px",
+                        backgroundColor: style.bg,
+                        color: style.text,
+                        borderColor: style.border,
+                        borderWidth: "1px",
+                        padding: "2px 0",
+                        marginTop: "4px",
+                        lineHeight: "1",
+                        textAlign: "center",
+                      }}
+                    >
+                      {style.name}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 4. 詳細スライドイン (100vh) */}
+      {/* 4. 詳細スライドイン */}
       <div
         className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] ${
           selectedDay ? "translate-y-0" : "translate-y-full"
@@ -196,7 +228,6 @@ export default function Calendar({
         <main className="py-[36px] px-[16px] h-[calc(100vh-120px)] overflow-y-auto relative">
           {selectedDay && (
             <div className="flex flex-col items-center">
-              {/* 日付表示 */}
               <h3 className="text-[36px] font-bold tracking-tighter leading-none mb-[24px] text-[#090C26]">
                 {format(selectedDay, "yyyy/MM/dd")}
                 <span>（</span>
@@ -206,16 +237,14 @@ export default function Calendar({
                 <span>）</span>
               </h3>
 
-              {/* コンテンツエリア */}
               <div className="w-full px-[16px]">
-                {/* 予定リスト表示エリア */}
+                {/* ここに詳細情報を表示するロジックを後で追加します */}
               </div>
 
-              {/* 追従プラスアイコン: 右16px, 下36px */}
-              {/* mainの中に置くことでスライドイン内でのみ追従させます */}
+              {/* 追従プラスアイコン: モーダルより前面に配置 */}
               <button
                 onClick={handleAddSchedule}
-                className="fixed right-[16px] bottom-[36px] w-[60px] h-[60px] hover:opacity-80 transition-opacity drop-shadow-lg"
+                className="fixed right-[16px] bottom-[36px] z-[120] w-[60px] h-[60px] hover:opacity-80 transition-opacity drop-shadow-lg"
               >
                 <Image
                   src="/images/icons/icon_plus.png"
