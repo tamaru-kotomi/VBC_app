@@ -18,8 +18,9 @@ import {
 } from "date-fns";
 import Image from "next/image";
 import Header from "../components/Header";
+import DetailTable from "./DetailTable";
+import { TargetLabel } from "./TargetLabel"; // ラベル用コンポーネントをインポート
 
-// デザイン定義（CustomInput.tsxと同じ配色）
 const targetStyles: Record<
   string,
   { bg: string; text: string; border: string; name: string }
@@ -37,7 +38,11 @@ interface Schedule {
   id: string;
   title: string;
   date: Date | string;
+  time?: string | null;
+  location?: string | null;
+  otherLocation?: string | null;
   targetId: string;
+  content?: string | null;
 }
 
 export default function Calendar({
@@ -50,11 +55,6 @@ export default function Calendar({
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
-  // 表示可能範囲（当月の前後1ヶ月）
-  const minMonth = startOfMonth(subMonths(today, 1));
-  const maxMonth = startOfMonth(addMonths(today, 1));
-
-  // カレンダー計算（月曜日始まり）
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -65,16 +65,9 @@ export default function Calendar({
     end: calendarEnd,
   });
 
-  // 前月・次月ボタンの活性判定
-  const canGoPrev = isAfter(monthStart, minMonth);
-  const canGoNext = isBefore(monthStart, maxMonth);
+  const canGoPrev = isAfter(monthStart, startOfMonth(subMonths(today, 1)));
+  const canGoNext = isBefore(monthStart, startOfMonth(addMonths(today, 1)));
 
-  const prevMonth = () =>
-    canGoPrev && setCurrentMonth(subMonths(currentMonth, 1));
-  const nextMonth = () =>
-    canGoNext && setCurrentMonth(addMonths(currentMonth, 1));
-
-  // 曜日の色を取得する関数
   const getDayColor = (date: Date) => {
     const dayEn = format(date, "EEE").toUpperCase();
     if (dayEn === "SUN") return "#C20000";
@@ -82,7 +75,6 @@ export default function Calendar({
     return "#090C26";
   };
 
-  // 登録画面へ遷移する関数
   const handleAddSchedule = () => {
     if (selectedDay) {
       const dateStr = format(selectedDay, "yyyy-MM-dd");
@@ -95,68 +87,63 @@ export default function Calendar({
       {/* 1. 年月ナビゲーション */}
       <div className="flex items-end justify-between mb-6 w-full px-[8px]">
         <button
-          onClick={prevMonth}
-          disabled={!canGoPrev}
-          className={`flex items-end text-[20px] font-bold transition-colors leading-none ${
-            !canGoPrev ? "cursor-not-allowed" : "hover:opacity-60"
-          }`}
-          style={{ color: canGoPrev ? "#090C26" : "#999999" }}
+          onClick={() =>
+            canGoPrev && setCurrentMonth(subMonths(currentMonth, 1))
+          }
+          className="flex items-end text-[20px] font-bold"
         >
-          <div className="relative w-[18px] h-[18px] mr-[4px] mb-[2px]">
-            <Image
-              src={
-                canGoPrev
-                  ? "/images/icons/icon_prev.png"
-                  : "/images/icons/icon_prev_gray.png"
-              }
-              alt="前月"
-              width={18}
-              height={18}
-            />
-          </div>
+          <Image
+            src={
+              canGoPrev
+                ? "/images/icons/icon_prev.png"
+                : "/images/icons/icon_prev_gray.png"
+            }
+            alt="前"
+            width={18}
+            height={18}
+          />{" "}
           前月
         </button>
-
-        <h2 className="text-[36px] font-bold tracking-tighter leading-none text-[#090C26]">
+        <h2 className="text-[36px] font-bold tracking-tighter leading-none">
           {format(currentMonth, "yyyy/MM")}
         </h2>
-
         <button
-          onClick={nextMonth}
-          disabled={!canGoNext}
-          className={`flex items-end text-[20px] font-bold transition-colors leading-none ${
-            !canGoNext ? "cursor-not-allowed" : "hover:opacity-60"
-          }`}
-          style={{ color: canGoNext ? "#090C26" : "#999999" }}
+          onClick={() =>
+            canGoNext && setCurrentMonth(addMonths(currentMonth, 1))
+          }
+          className="flex items-end text-[20px] font-bold"
         >
-          次月
-          <div className="relative w-[18px] h-[18px] ml-[4px] mb-[2px]">
-            <Image
-              src={
-                canGoNext
-                  ? "/images/icons/icon_next.png"
-                  : "/images/icons/icon_next_gray.png"
-              }
-              alt="次月"
-              width={18}
-              height={18}
-            />
-          </div>
+          次月{" "}
+          <Image
+            src={
+              canGoNext
+                ? "/images/icons/icon_next.png"
+                : "/images/icons/icon_next_gray.png"
+            }
+            alt="次"
+            width={18}
+            height={18}
+          />
         </button>
       </div>
 
       {/* 2. 曜日ヘッダー */}
-      <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold leading-none">
-        {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => {
-          let textColor = "#090C26";
-          if (day === "SUN") textColor = "#C20000";
-          if (day === "SAT") textColor = "#5343CD";
-          return (
-            <div key={day} style={{ color: textColor }}>
-              {day}
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
+        {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
+          <div
+            key={day}
+            style={{
+              color:
+                day === "SUN"
+                  ? "#C20000"
+                  : day === "SAT"
+                  ? "#5343CD"
+                  : "#090C26",
+            }}
+          >
+            {day}
+          </div>
+        ))}
       </div>
 
       {/* 3. カレンダーグリッド */}
@@ -171,18 +158,16 @@ export default function Calendar({
             <div
               key={day.toString()}
               onClick={() => setSelectedDay(day)}
-              className="relative h-[142px] bg-white cursor-pointer hover:bg-slate-50 transition-colors"
+              className="relative h-[142px] bg-white cursor-pointer hover:bg-slate-50"
             >
               <span
-                className={`absolute left-[4px] top-[4px] text-[16px] font-bold leading-none ${
+                className={`absolute left-[4px] top-[4px] text-[16px] font-bold ${
                   !isCurrentMonth ? "text-[#9D9D9D]" : "text-[#090C26]"
                 }`}
               >
                 {format(day, "d")}
               </span>
-
-              {/* ラベル表示エリア */}
-              <div className="mt-[24px] flex flex-col items-center gap-[0px]">
+              <div className="mt-[24px] flex flex-col items-center">
                 {daySchedules.map((item) => {
                   const style = targetStyles[item.targetId] || targetStyles.ALL;
                   return (
@@ -215,7 +200,7 @@ export default function Calendar({
 
       {/* 4. 詳細スライドイン */}
       <div
-        className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] ${
+        className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ${
           selectedDay ? "translate-y-0" : "translate-y-full"
         }`}
       >
@@ -224,11 +209,10 @@ export default function Calendar({
           onClose={() => setSelectedDay(null)}
           title="詳細"
         />
-
-        <main className="py-[36px] px-[16px] h-[calc(100vh-120px)] overflow-y-auto relative">
+        <main className="py-[36px] px-[16px] h-[calc(100vh-120px)] overflow-y-auto">
           {selectedDay && (
             <div className="flex flex-col items-center">
-              <h3 className="text-[36px] font-bold tracking-tighter leading-none mb-[24px] text-[#090C26]">
+              <h3 className="text-[36px] font-bold tracking-tighter mb-[24px]">
                 {format(selectedDay, "yyyy/MM/dd")}
                 <span>（</span>
                 <span style={{ color: getDayColor(selectedDay) }}>
@@ -237,18 +221,46 @@ export default function Calendar({
                 <span>）</span>
               </h3>
 
-              <div className="w-full px-[16px]">
-                {/* ここに詳細情報を表示するロジックを後で追加します */}
+              {/* 左右のpaddingを0に調整 (w-fullのみにし、px-8を除去) */}
+              <div className="w-full space-y-10 pb-[100px]">
+                {initialSchedules
+                  .filter((s) => isSameDay(new Date(s.date), selectedDay))
+                  .map((schedule) => (
+                    <div key={schedule.id} className="w-full">
+                      {/* ラベル部分を TargetLabel コンポーネントに変更 */}
+                      <div className="mb-3">
+                        <TargetLabel targetId={schedule.targetId} />
+                      </div>
+
+                      <DetailTable
+                        targetId={schedule.targetId}
+                        items={[
+                          { label: "タイトル", value: schedule.title },
+                          { label: "時間", value: schedule.time || "未設定" },
+                          {
+                            label: "場所",
+                            value:
+                              schedule.location === "その他"
+                                ? schedule.otherLocation || "未設定"
+                                : schedule.location || "未設定",
+                          },
+                          {
+                            label: "内容・連絡事項",
+                            value: schedule.content || "-",
+                          },
+                        ]}
+                      />
+                    </div>
+                  ))}
               </div>
 
-              {/* 追従プラスアイコン: モーダルより前面に配置 */}
               <button
                 onClick={handleAddSchedule}
-                className="fixed right-[16px] bottom-[36px] z-[120] w-[60px] h-[60px] hover:opacity-80 transition-opacity drop-shadow-lg"
+                className="fixed right-[16px] bottom-[36px] z-[120]"
               >
                 <Image
                   src="/images/icons/icon_plus.png"
-                  alt="予定を追加"
+                  alt="追加"
                   width={60}
                   height={60}
                 />

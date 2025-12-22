@@ -1,7 +1,20 @@
 "use client";
 
 import React from "react";
-import { TARGET_CONFIG } from "./TargetLabel";
+
+// TargetLabelと同じ設定を使用
+const TARGET_CONFIG: Record<
+  string,
+  { bg: string; text: string; border?: string }
+> = {
+  ALL: { bg: "#8BC34A", text: "#FFFFFF" },
+  boys: { bg: "#3C2465", text: "#FFFFFF" },
+  boysA: { bg: "#673AB7", text: "#FFFFFF" },
+  boysB: { bg: "#ffffff", text: "#673AB7", border: "#673AB7" },
+  girls: { bg: "#811C1C", text: "#FFFFFF" },
+  girlsA: { bg: "#D32F2F", text: "#FFFFFF" },
+  girlsB: { bg: "#ffffff", text: "#D32F2F", border: "#D32F2F" },
+};
 
 interface DetailItem {
   label: string;
@@ -14,23 +27,22 @@ interface DetailTableProps {
   maxHeight?: string;
 }
 
-export const DetailTable = ({
+export default function DetailTable({
   items,
   targetId,
-  maxHeight = "266px",
-}: DetailTableProps) => {
+  maxHeight = "none",
+}: DetailTableProps) {
   const config = TARGET_CONFIG[targetId] || TARGET_CONFIG.ALL;
 
   return (
     <div
-      className="w-full border-[2px] border-[#9D9D9D] overflow-y-auto overflow-x-hidden"
-      style={{ maxHeight }}
+      className="w-full border-[2px] border-[#9D9D9D] overflow-y-auto overflow-x-hidden bg-white"
+      style={{ maxHeight }} // ここで高さ制限が効きます
     >
       <div className="p-[4px]">
         <dl className="flex flex-col w-full text-[#090C26]">
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
-
             return (
               <React.Fragment key={item.label}>
                 <div
@@ -43,39 +55,34 @@ export const DetailTable = ({
                       !isLast ? "pb-[4px]" : ""
                     }`}
                   >
-                    {/* dt: 項目名 */}
                     <dt
-                      className="w-[100px] flex-shrink-0 flex items-center px-[8px] py-[9px] text-[20px] font-bold leading-tight"
+                      className="w-[100px] flex-shrink-0 flex items-center px-[8px] py-[9px] text-[16px] font-bold leading-tight"
                       style={{
                         backgroundColor: config.bg,
                         color: config.text,
-                        // 男子B/女子B等の枠線を2pxに。
-                        // ベタ塗りのタイプも、右側の線を2pxに合わせると統一感が出ます。
                         border: config.border
                           ? `2px solid ${config.border}`
                           : "none",
                         borderRight: !config.border
-                          ? `2px solid ${config.bg}` // ベタ塗りの場合、右側だけ2pxの境界線を引く
+                          ? `2px solid ${config.bg}`
                           : `2px solid ${config.border}`,
                       }}
                     >
                       {item.label === "内容・連絡事項" ? (
-                        <>
+                        <span>
                           内容・
                           <br />
                           連絡事項
-                        </>
+                        </span>
                       ) : (
                         item.label
                       )}
                     </dt>
-                    {/* dd: 内容 */}
-                    <dd className="flex-1 flex items-center px-[12px] py-[10px] text-[16px] leading-tight break-all bg-white">
+                    <dd className="flex-1 flex items-center px-[12px] py-[10px] text-[16px] leading-tight break-all bg-white font-medium whitespace-pre-wrap">
                       {item.value}
                     </dd>
                   </div>
                 </div>
-
                 {!isLast && <div className="h-[1px] w-full bg-[#D9D9D9]" />}
               </React.Fragment>
             );
@@ -84,4 +91,4 @@ export const DetailTable = ({
       </div>
     </div>
   );
-};
+}

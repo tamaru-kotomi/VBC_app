@@ -17,7 +17,7 @@ import { CommonInput } from "../../components/CommonInput";
 import { SelectBox } from "../../components/SelectBox";
 import { Modal } from "../../components/Modal";
 import { TargetLabel } from "../../components/TargetLabel";
-import { DetailTable } from "../../components/DetailTable";
+import DetailTable from "../../components/DetailTable";
 
 interface TargetOption {
   id: string;
@@ -93,15 +93,14 @@ export default function CreateSchedulePage() {
           time,
           location,
           otherLocation,
-          target, // ここで選んだ値（boysAなど）を送る
+          target,
           content,
         }),
       });
 
       if (response.ok) {
-        // 成功したらカレンダーへ戻る
         router.push("/calendar");
-        router.refresh(); // 最新のデータを取得し直す
+        router.refresh();
       } else {
         const errorData = await response.json();
         alert("保存に失敗しました: " + errorData.error);
@@ -364,8 +363,10 @@ export default function CreateSchedulePage() {
           <div className="w-full flex justify-start mb-[18px]">
             <TargetLabel targetId={target} />
           </div>
+          {/* 日付を表の一番上に追加し、maxHeightでスクロール可能に */}
           <DetailTable
             targetId={target}
+            maxHeight="266px"
             items={[
               { label: "日付", value: `${year}/${month}/${day}` },
               { label: "タイトル", value: title },
@@ -377,13 +378,13 @@ export default function CreateSchedulePage() {
                     ? otherLocation
                     : location || "指定なし",
               },
-              { label: "内容・連絡事項", value: content || "なし" },
+              { label: "内容・連絡事項", value: content || "-" },
             ]}
           />
         </div>
       </Modal>
 
-      {/* 2. キャンセル確認用モーダル（修正ポイント） */}
+      {/* 2. キャンセル確認用モーダル */}
       <Modal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
