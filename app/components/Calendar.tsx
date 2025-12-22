@@ -13,14 +13,16 @@ import {
   endOfWeek,
   isSameDay,
   isSameMonth,
-  isBefore,
   isAfter,
+  isBefore,
+  startOfDay,
 } from "date-fns";
 import Image from "next/image";
 import Header from "../components/Header";
 import DetailTable from "./DetailTable";
 import { TargetLabel } from "./TargetLabel";
-import { Modal } from "./Modal"; // 削除用モーダルで使用
+import { Modal } from "./Modal";
+import Button from "../components/Button";
 
 const targetStyles: Record<
   string,
@@ -52,15 +54,17 @@ export default function Calendar({
   initialSchedules: Schedule[];
 }) {
   const router = useRouter();
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today);
+  const today = startOfDay(new Date());
+
+  const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
-  // 削除モーダル用のステート
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(
+  const [deletingSchedule, setDeletingSchedule] = useState<Schedule | null>(
     null
   );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -72,24 +76,23 @@ export default function Calendar({
     end: calendarEnd,
   });
 
-  const canGoPrev = isAfter(monthStart, startOfMonth(subMonths(today, 1)));
-  const canGoNext = isBefore(monthStart, startOfMonth(addMonths(today, 1)));
+  const canGoPrev = isAfter(monthStart, startOfMonth(subMonths(new Date(), 1)));
+  const canGoNext = isBefore(
+    monthStart,
+    startOfMonth(addMonths(new Date(), 1))
+  );
 
-  const getDayColor = (date: Date) => {
-    const dayEn = format(date, "EEE").toUpperCase();
-    if (dayEn === "SUN") return "#C20000";
-    if (dayEn === "SAT") return "#5343CD";
-    return "#090C26";
-  };
+  const isSelectedPast = selectedDay
+    ? isBefore(startOfDay(selectedDay), today)
+    : false;
 
   const handleAddSchedule = () => {
-    if (selectedDay) {
+    if (selectedDay && !isSelectedPast) {
       const dateStr = format(selectedDay, "yyyy-MM-dd");
       router.push(`/calendar/create?date=${dateStr}&isNew=true`);
     }
   };
 
-  // 編集ボタン押下時の処理
   const handleEdit = (schedule: Schedule) => {
     const dateObj = new Date(schedule.date);
     const params = new URLSearchParams({
@@ -101,20 +104,47 @@ export default function Calendar({
       otherLocation: schedule.otherLocation || "",
       target: schedule.targetId,
       content: schedule.content || "",
-      isNew: "false", // 編集モードであることを伝える
+      isNew: "false",
     });
     router.push(`/calendar/create?${params.toString()}`);
   };
 
-  // 削除アイコン押下時
-  const confirmDelete = (id: string) => {
-    setDeletingScheduleId(id);
+  const confirmDelete = (schedule: Schedule) => {
+    setDeletingSchedule(schedule);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingSchedule || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/schedules/${deletingSchedule.id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setSchedules((prev) =>
+          prev.filter((s) => s.id !== deletingSchedule.id)
+        );
+        setIsDeleteModalOpen(false);
+        setDeletingSchedule(null);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const getDayColor = (date: Date) => {
+    const dayEn = format(date, "EEE").toUpperCase();
+    if (dayEn === "SUN") return "#C20000";
+    if (dayEn === "SAT") return "#5343CD";
+    return "#090C26";
   };
 
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
-      {/* 1. 年月ナビゲーション */}
+      {/* カレンダーヘッダー */}
       <div className="flex items-center justify-between mb-6 w-full px-[8px]">
         <button
           onClick={() =>
@@ -161,7 +191,7 @@ export default function Calendar({
         </button>
       </div>
 
-      {/* 2. 曜日ヘッダー / 3. カレンダーグリッド (省略なし) */}
+      {/* 曜日表示 */}
       <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
         {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
           <div
@@ -180,9 +210,10 @@ export default function Calendar({
         ))}
       </div>
 
+      {/* カレンダー本体 */}
       <div className="border-[2px] border-[#9D9D9D] bg-[#9D9D9D] grid grid-cols-7 gap-[1px] overflow-hidden rounded-[2px]">
         {calendarDays.map((day) => {
-          const daySchedules = initialSchedules.filter((s) =>
+          const daySchedules = schedules.filter((s) =>
             isSameDay(new Date(s.date), day)
           );
           const isCurrentMonth = isSameMonth(day, monthStart);
@@ -230,7 +261,7 @@ export default function Calendar({
         })}
       </div>
 
-      {/* 4. 詳細スライドイン */}
+      {/* 詳細スライドインモーダル */}
       <div
         className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ${
           selectedDay ? "translate-y-0" : "translate-y-full"
@@ -254,77 +285,111 @@ export default function Calendar({
               </h3>
 
               <div className="w-full space-y-10 pb-[120px]">
-                {initialSchedules
-                  .filter((s) => isSameDay(new Date(s.date), selectedDay))
-                  .map((schedule) => (
-                    <div key={schedule.id} className="w-full">
-                      {/* ラベルと操作アイコンの行 */}
-                      <div className="flex justify-between items-center mb-[8px]">
-                        <TargetLabel targetId={schedule.targetId} />
+                {(() => {
+                  const filteredSchedules = schedules.filter((s) =>
+                    isSameDay(new Date(s.date), selectedDay)
+                  );
 
-                        <div className="flex gap-[16px]">
-                          {/* 編集ボタン */}
-                          <button
-                            onClick={() => handleEdit(schedule)}
-                            className="flex flex-col items-center gap-[2px]"
-                          >
-                            <Image
-                              src="/images/icons/icon_edit.png"
-                              alt="編集"
-                              width={32}
-                              height={32}
-                            />
-                            <span className="text-[10px] font-bold text-[#090C26]">
-                              編集
-                            </span>
-                          </button>
-
-                          {/* 削除ボタン */}
-                          <button
-                            onClick={() => confirmDelete(schedule.id)}
-                            className="flex flex-col items-center gap-[2px]"
-                          >
-                            <Image
-                              src="/images/icons/icon_trash.png"
-                              alt="削除"
-                              width={32}
-                              height={32}
-                            />
-                            <span className="text-[10px] font-bold text-[#090C26]">
-                              削除
-                            </span>
-                          </button>
-                        </div>
+                  // スケジュールが1件もない場合の表示
+                  if (filteredSchedules.length === 0) {
+                    return (
+                      <div className="w-full text-center">
+                        <p className="text-[16px] font-bold text-[#090C26]">
+                          現在、表示できるスケジュールはありません。
+                        </p>
                       </div>
+                    );
+                  }
 
-                      <DetailTable
-                        targetId={schedule.targetId}
-                        items={[
-                          { label: "タイトル", value: schedule.title },
-                          { label: "時間", value: schedule.time || "未設定" },
-                          {
-                            label: "場所",
-                            value:
-                              schedule.location === "その他"
-                                ? schedule.otherLocation || "未設定"
-                                : schedule.location || "未設定",
-                          },
-                          {
-                            label: "内容・連絡事項",
-                            value: schedule.content || "-",
-                          },
-                        ]}
-                      />
-                    </div>
-                  ))}
+                  // スケジュールがある場合の表示
+                  return filteredSchedules.map((schedule) => {
+                    const isPast = isBefore(
+                      startOfDay(new Date(schedule.date)),
+                      today
+                    );
+                    return (
+                      <div key={schedule.id} className="w-full">
+                        <div className="flex justify-between items-center mb-[8px]">
+                          <TargetLabel targetId={schedule.targetId} />
+                          <div className="flex gap-[16px]">
+                            <button
+                              onClick={() => !isPast && handleEdit(schedule)}
+                              disabled={isPast}
+                              className="flex flex-col items-center gap-[2px]"
+                            >
+                              <Image
+                                src={
+                                  isPast
+                                    ? "/images/icons/icon_edit_gray.png"
+                                    : "/images/icons/icon_edit.png"
+                                }
+                                alt="編集"
+                                width={32}
+                                height={32}
+                              />
+                              <span
+                                className="text-[12px] font-bold"
+                                style={{
+                                  color: isPast ? "#999999" : "#090C26",
+                                }}
+                              >
+                                編集
+                              </span>
+                            </button>
+                            <button
+                              onClick={() => confirmDelete(schedule)}
+                              className="flex flex-col items-center gap-[2px]"
+                            >
+                              <Image
+                                src="/images/icons/icon_trash.png"
+                                alt="削除"
+                                width={32}
+                                height={32}
+                              />
+                              <span className="text-[12px] font-bold text-[#090C26]">
+                                削除
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                        <DetailTable
+                          targetId={schedule.targetId}
+                          items={[
+                            { label: "タイトル", value: schedule.title },
+                            { label: "時間", value: schedule.time || "未設定" },
+                            {
+                              label: "場所",
+                              value:
+                                schedule.location === "その他"
+                                  ? schedule.otherLocation || "未設定"
+                                  : schedule.location || "未設定",
+                            },
+                            {
+                              label: "内容・連絡事項",
+                              value: schedule.content || "-",
+                            },
+                          ]}
+                        />
+                      </div>
+                    );
+                  });
+                })()}
               </div>
 
+              {/* 追加ボタン */}
               <button
-                onClick={handleAddSchedule}
-                className="fixed right-[16px] bottom-[36px] z-[120]"
+                onClick={() => !isSelectedPast && handleAddSchedule()}
+                disabled={isSelectedPast}
+                className={`fixed right-[16px] bottom-[36px] z-[120] ${
+                  isSelectedPast ? "cursor-not-allowed" : ""
+                }`}
               >
                 <Image
-                  src="/images/icons/icon_plus.png"
+                  src={
+                    isSelectedPast
+                      ? "/images/icons/icon_plus_gray.png"
+                      : "/images/icons/icon_plus.png"
+                  }
                   alt="追加"
                   width={96}
                   height={96}
@@ -335,14 +400,42 @@ export default function Calendar({
         </main>
       </div>
 
-      {/* 削除確認用モーダル (中身は後ほど指示に従い実装します) */}
+      {/* 削除確認モーダル */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        buttons={null} // 後で指示通りに配置
+        buttons={
+          <div className="flex flex-row gap-[16px] justify-center w-full">
+            <Button
+              label="YES"
+              activeBgColor="#090C26"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            />
+            <Button
+              label="NO"
+              activeBgColor="#143875"
+              onClick={() => setIsDeleteModalOpen(false)}
+            />
+          </div>
+        }
       >
-        {/* 指示待ち */}
-        <div className="p-4 text-center">削除の確認画面をここに実装します</div>
+        <div className="py-[20px] text-center flex flex-col items-center gap-[4px]">
+          {deletingSchedule && (
+            <>
+              <p className="text-[16px] font-bold text-[#090C26] leading-tight">
+                {format(new Date(deletingSchedule.date), "yyyy/MM/dd")}{" "}
+                {targetStyles[deletingSchedule.targetId]?.name || ""}
+              </p>
+              <p className="text-[16px] font-bold text-[#090C26] leading-tight">
+                「{deletingSchedule.title}」
+              </p>
+              <p className="text-[16px] font-bold text-[#090C26] leading-tight mt-[8px]">
+                の予定を本当に削除しますか？
+              </p>
+            </>
+          )}
+        </div>
       </Modal>
     </div>
   );

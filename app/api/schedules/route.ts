@@ -1,56 +1,55 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-// Prismaの接続を初期化
-const prisma = new PrismaClient();
+import { db } from "../../lib/db"; // 相対パスで確実に指定
 
 export async function POST(request: Request) {
   try {
-    // 1. フロントエンド（page.tsx）から送られてきたJSONデータを受け取る
-    const body = await request.json();
+    const data = await request.json();
+    const {
+      id,
+      year,
+      month,
+      day,
+      title,
+      time,
+      location,
+      otherLocation,
+      target,
+      content,
+    } = data;
 
-    // 2. 送られてきた年・月・日を、DBが理解できる「Date型」に変換する
-    // JavaScriptのDateは月が0から始まるので -1 する
     const scheduleDate = new Date(
-      parseInt(body.year),
-      parseInt(body.month) - 1,
-      parseInt(body.day)
+      parseInt(year),
+      parseInt(month) - 1,
+      parseInt(day)
     );
 
-    // 3. データベースに保存する（ここがあなたの書いた心臓部です！）
-    const result = await prisma.schedule.create({
-      data: {
-        date: scheduleDate,
-        title: body.title,
-        time: body.time || null,
-        location: body.location || null,
-        otherLocation: body.otherLocation || null,
-        targetId: body.target, // ラジオボタンで選ばれたID（ALL, boysAなど）
-        content: body.content || null,
-      },
-    });
+    // 保存・更新用データ
+    const payload = {
+      title,
+      date: scheduleDate,
+      time: time || null,
+      location: location || null,
+      otherLocation: otherLocation || null,
+      targetId: target,
+      content: content || null,
+    };
 
-    // 4. 成功したよ！という返事と、保存されたデータをフロントエンドに返す
-    return NextResponse.json(result);
+    if (id) {
+      // IDがある場合は「修正（反映）」
+      await db.schedule.update({
+        where: { id: id },
+        data: payload,
+      });
+      return NextResponse.json({ success: true, message: "Updated" });
+    } else {
+      // IDがない場合は「新規登録」
+      await db.schedule.create({
+        data: payload,
+      });
+      return NextResponse.json({ success: true, message: "Created" });
+    }
   } catch (error) {
-    // 5. 万が一エラーが起きた場合の処理
-    console.error("保存時にエラーが発生しました:", error);
-    return NextResponse.json(
-      { error: "スケジュールの保存に失敗しました。" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET() {
-  try {
-    const schedules = await prisma.schedule.findMany({
-      orderBy: {
-        date: "asc",
-      },
-    });
-    return NextResponse.json(schedules);
-  } catch (error) {
-    return NextResponse.json({ error: "取得失敗" }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: "保存に失敗しました" }, { status: 500 });
   }
 }
