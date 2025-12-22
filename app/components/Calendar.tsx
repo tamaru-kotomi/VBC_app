@@ -19,7 +19,8 @@ import {
 import Image from "next/image";
 import Header from "../components/Header";
 import DetailTable from "./DetailTable";
-import { TargetLabel } from "./TargetLabel"; // ラベル用コンポーネントをインポート
+import { TargetLabel } from "./TargetLabel";
+import { Modal } from "./Modal"; // 削除用モーダルで使用
 
 const targetStyles: Record<
   string,
@@ -55,6 +56,12 @@ export default function Calendar({
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
+  // 削除モーダル用のステート
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(
+    null
+  );
+
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
@@ -82,15 +89,40 @@ export default function Calendar({
     }
   };
 
+  // 編集ボタン押下時の処理
+  const handleEdit = (schedule: Schedule) => {
+    const dateObj = new Date(schedule.date);
+    const params = new URLSearchParams({
+      id: schedule.id,
+      date: format(dateObj, "yyyy-MM-dd"),
+      title: schedule.title || "",
+      time: schedule.time || "",
+      location: schedule.location || "",
+      otherLocation: schedule.otherLocation || "",
+      target: schedule.targetId,
+      content: schedule.content || "",
+      isNew: "false", // 編集モードであることを伝える
+    });
+    router.push(`/calendar/create?${params.toString()}`);
+  };
+
+  // 削除アイコン押下時
+  const confirmDelete = (id: string) => {
+    setDeletingScheduleId(id);
+    setIsDeleteModalOpen(true);
+  };
+
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
       {/* 1. 年月ナビゲーション */}
-      <div className="flex items-end justify-between mb-6 w-full px-[8px]">
+      <div className="flex items-center justify-between mb-6 w-full px-[8px]">
         <button
           onClick={() =>
             canGoPrev && setCurrentMonth(subMonths(currentMonth, 1))
           }
-          className="flex items-end text-[20px] font-bold"
+          className={`flex items-center gap-[4px] text-[20px] font-bold ${
+            !canGoPrev ? "opacity-50" : ""
+          }`}
         >
           <Image
             src={
@@ -101,8 +133,8 @@ export default function Calendar({
             alt="前"
             width={18}
             height={18}
-          />{" "}
-          前月
+          />
+          <span>前月</span>
         </button>
         <h2 className="text-[36px] font-bold tracking-tighter leading-none">
           {format(currentMonth, "yyyy/MM")}
@@ -111,9 +143,11 @@ export default function Calendar({
           onClick={() =>
             canGoNext && setCurrentMonth(addMonths(currentMonth, 1))
           }
-          className="flex items-end text-[20px] font-bold"
+          className={`flex items-center gap-[4px] text-[20px] font-bold ${
+            !canGoNext ? "opacity-50" : ""
+          }`}
         >
-          次月{" "}
+          <span>次月</span>
           <Image
             src={
               canGoNext
@@ -127,7 +161,7 @@ export default function Calendar({
         </button>
       </div>
 
-      {/* 2. 曜日ヘッダー */}
+      {/* 2. 曜日ヘッダー / 3. カレンダーグリッド (省略なし) */}
       <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
         {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
           <div
@@ -146,14 +180,12 @@ export default function Calendar({
         ))}
       </div>
 
-      {/* 3. カレンダーグリッド */}
       <div className="border-[2px] border-[#9D9D9D] bg-[#9D9D9D] grid grid-cols-7 gap-[1px] overflow-hidden rounded-[2px]">
         {calendarDays.map((day) => {
           const daySchedules = initialSchedules.filter((s) =>
             isSameDay(new Date(s.date), day)
           );
           const isCurrentMonth = isSameMonth(day, monthStart);
-
           return (
             <div
               key={day.toString()}
@@ -221,15 +253,48 @@ export default function Calendar({
                 <span>）</span>
               </h3>
 
-              {/* 左右のpaddingを0に調整 (w-fullのみにし、px-8を除去) */}
-              <div className="w-full space-y-10 pb-[100px]">
+              <div className="w-full space-y-10 pb-[120px]">
                 {initialSchedules
                   .filter((s) => isSameDay(new Date(s.date), selectedDay))
                   .map((schedule) => (
                     <div key={schedule.id} className="w-full">
-                      {/* ラベル部分を TargetLabel コンポーネントに変更 */}
-                      <div className="mb-3">
+                      {/* ラベルと操作アイコンの行 */}
+                      <div className="flex justify-between items-center mb-[8px]">
                         <TargetLabel targetId={schedule.targetId} />
+
+                        <div className="flex gap-[16px]">
+                          {/* 編集ボタン */}
+                          <button
+                            onClick={() => handleEdit(schedule)}
+                            className="flex flex-col items-center gap-[2px]"
+                          >
+                            <Image
+                              src="/images/icons/icon_edit.png"
+                              alt="編集"
+                              width={32}
+                              height={32}
+                            />
+                            <span className="text-[10px] font-bold text-[#090C26]">
+                              編集
+                            </span>
+                          </button>
+
+                          {/* 削除ボタン */}
+                          <button
+                            onClick={() => confirmDelete(schedule.id)}
+                            className="flex flex-col items-center gap-[2px]"
+                          >
+                            <Image
+                              src="/images/icons/icon_trash.png"
+                              alt="削除"
+                              width={32}
+                              height={32}
+                            />
+                            <span className="text-[10px] font-bold text-[#090C26]">
+                              削除
+                            </span>
+                          </button>
+                        </div>
                       </div>
 
                       <DetailTable
@@ -261,14 +326,24 @@ export default function Calendar({
                 <Image
                   src="/images/icons/icon_plus.png"
                   alt="追加"
-                  width={60}
-                  height={60}
+                  width={96}
+                  height={96}
                 />
               </button>
             </div>
           )}
         </main>
       </div>
+
+      {/* 削除確認用モーダル (中身は後ほど指示に従い実装します) */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        buttons={null} // 後で指示通りに配置
+      >
+        {/* 指示待ち */}
+        <div className="p-4 text-center">削除の確認画面をここに実装します</div>
+      </Modal>
     </div>
   );
 }

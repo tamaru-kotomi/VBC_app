@@ -56,7 +56,7 @@ export default function DetailTable({
                     }`}
                   >
                     <dt
-                      className="w-[100px] flex-shrink-0 flex items-center px-[8px] py-[9px] text-[16px] font-bold leading-tight"
+                      className="w-[100px] flex-shrink-0 px-[8px] py-[9px] text-[20px] font-bold leading-tight"
                       style={{
                         backgroundColor: config.bg,
                         color: config.text,
