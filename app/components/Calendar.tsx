@@ -1,21 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   format,
-  addMonths,
-  subMonths,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  startOfWeek,
-  endOfWeek,
   isSameDay,
   isSameMonth,
   isAfter,
   isBefore,
   startOfDay,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  subMonths,
+  addMonths,
 } from "date-fns";
 import Image from "next/image";
 import Header from "../components/Header";
@@ -23,6 +23,7 @@ import DetailTable from "./DetailTable";
 import { TargetLabel } from "./TargetLabel";
 import { Modal } from "./Modal";
 import Button from "../components/Button";
+import { Schedule } from "./CalendarWrapper"; // Wrapperから型をインポート
 
 const targetStyles: Record<
   string,
@@ -37,22 +38,15 @@ const targetStyles: Record<
   girlsB: { bg: "#FFFFFF", text: "#D32F2F", border: "#D32F2F", name: "女子B" },
 };
 
-interface Schedule {
-  id: string;
-  title: string;
-  date: Date | string;
-  time?: string | null;
-  location?: string | null;
-  otherLocation?: string | null;
-  targetId: string;
-  content?: string | null;
+interface CalendarProps {
+  initialSchedules: Schedule[];
+  activeFilters: string[];
 }
 
 export default function Calendar({
   initialSchedules,
-}: {
-  initialSchedules: Schedule[];
-}) {
+  activeFilters,
+}: CalendarProps) {
   const router = useRouter();
   const today = startOfDay(new Date());
 
@@ -66,14 +60,15 @@ export default function Calendar({
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
+  useEffect(() => {
+    setSchedules(initialSchedules);
+  }, [initialSchedules]);
+
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-
   const calendarDays = eachDayOfInterval({
-    start: calendarStart,
-    end: calendarEnd,
+    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+    end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
   });
 
   const canGoPrev = isAfter(monthStart, startOfMonth(subMonths(new Date(), 1)));
@@ -81,10 +76,13 @@ export default function Calendar({
     monthStart,
     startOfMonth(addMonths(new Date(), 1))
   );
-
   const isSelectedPast = selectedDay
     ? isBefore(startOfDay(selectedDay), today)
     : false;
+
+  const getFilteredSchedules = (list: Schedule[]) => {
+    return list.filter((s) => activeFilters.includes(s.targetId));
+  };
 
   const handleAddSchedule = () => {
     if (selectedDay && !isSelectedPast) {
@@ -128,8 +126,8 @@ export default function Calendar({
         setIsDeleteModalOpen(false);
         setDeletingSchedule(null);
       }
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error(e);
     } finally {
       setIsDeleting(false);
     }
@@ -144,7 +142,7 @@ export default function Calendar({
 
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
-      {/* カレンダーヘッダー */}
+      {/* 年月ナビ */}
       <div className="flex items-center justify-between mb-6 w-full px-[8px]">
         <button
           onClick={() =>
@@ -213,10 +211,12 @@ export default function Calendar({
       {/* カレンダー本体 */}
       <div className="border-[2px] border-[#9D9D9D] bg-[#9D9D9D] grid grid-cols-7 gap-[1px] overflow-hidden rounded-[2px]">
         {calendarDays.map((day) => {
-          const daySchedules = schedules.filter((s) =>
+          const rawDaySchedules = schedules.filter((s) =>
             isSameDay(new Date(s.date), day)
           );
+          const daySchedules = getFilteredSchedules(rawDaySchedules);
           const isCurrentMonth = isSameMonth(day, monthStart);
+
           return (
             <div
               key={day.toString()}
@@ -286,11 +286,12 @@ export default function Calendar({
 
               <div className="w-full space-y-10 pb-[120px]">
                 {(() => {
-                  const filteredSchedules = schedules.filter((s) =>
+                  const rawDaySchedules = schedules.filter((s) =>
                     isSameDay(new Date(s.date), selectedDay)
                   );
+                  const filteredSchedules =
+                    getFilteredSchedules(rawDaySchedules);
 
-                  // スケジュールが1件もない場合の表示
                   if (filteredSchedules.length === 0) {
                     return (
                       <div className="w-full text-center">
@@ -301,7 +302,6 @@ export default function Calendar({
                     );
                   }
 
-                  // スケジュールがある場合の表示
                   return filteredSchedules.map((schedule) => {
                     const isPast = isBefore(
                       startOfDay(new Date(schedule.date)),
@@ -355,7 +355,7 @@ export default function Calendar({
                         <DetailTable
                           targetId={schedule.targetId}
                           items={[
-                            { label: "タイトル", value: schedule.title },
+                            { label: "タイトル", value: schedule.title || "" },
                             { label: "時間", value: schedule.time || "未設定" },
                             {
                               label: "場所",
@@ -376,12 +376,12 @@ export default function Calendar({
                 })()}
               </div>
 
-              {/* 追加ボタン */}
+              {/* 復元：プラス追従アイコン */}
               <button
                 onClick={() => !isSelectedPast && handleAddSchedule()}
                 disabled={isSelectedPast}
                 className={`fixed right-[16px] bottom-[36px] z-[120] ${
-                  isSelectedPast ? "cursor-not-allowed" : ""
+                  isSelectedPast ? "cursor-not-allowed opacity-50" : ""
                 }`}
               >
                 <Image

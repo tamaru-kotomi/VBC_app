@@ -6,10 +6,11 @@ import CustomInput from "./CustomInput";
 import Button from "./Button";
 
 interface HeaderProps {
-  title?: string; // 画面タイトル（例：「詳細」「スケジュール登録」）
-  showClose?: boolean; // クローズボタン（×）を表示するか
-  showGear?: boolean; // ギアアイコンを表示するか（トップ用）
-  onClose?: () => void; // クローズボタン押下時の処理
+  title?: string;
+  showClose?: boolean;
+  showGear?: boolean;
+  onClose?: () => void;
+  onFilterApply?: (selectedIds: string[]) => void;
 }
 
 export default function Header({
@@ -17,6 +18,7 @@ export default function Header({
   showClose = false,
   showGear = false,
   onClose,
+  onFilterApply,
 }: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({
@@ -108,14 +110,15 @@ export default function Header({
   };
 
   const filterfunction = () => {
+    const selectedIds = Object.keys(checkedItems).filter(
+      (key) => checkedItems[key]
+    );
+    if (onFilterApply) onFilterApply(selectedIds);
     setIsFilterOpen(false);
     setBackupCheckedItems(null);
   };
+
   const cancelFilter = () => {
-    if (backupCheckedItems) setCheckedItems(backupCheckedItems);
-    setIsFilterOpen(false);
-  };
-  const handleOverlayClick = () => {
     if (backupCheckedItems) setCheckedItems(backupCheckedItems);
     setIsFilterOpen(false);
   };
@@ -128,14 +131,11 @@ export default function Header({
         } w-full z-[100] leading-tight`}
       >
         <div className="relative w-full h-[120px] bg-[#090C26] overflow-hidden">
-          {/* タイトルがある場合のみ表示。ない場合は空欄 */}
           {title && (
             <h1 className="absolute left-[16px] bottom-[16px] text-white text-[36px] font-bold tracking-wider leading-none">
               {title}
             </h1>
           )}
-
-          {/* クローズボタン */}
           {showClose && (
             <button
               onClick={onClose}
@@ -149,8 +149,6 @@ export default function Header({
               />
             </button>
           )}
-
-          {/* ギアマーク */}
           {showGear && (
             <button
               onClick={handleGearClick}
@@ -165,8 +163,6 @@ export default function Header({
             </button>
           )}
         </div>
-
-        {/* フィルタードロップダウン */}
         <div
           className={`absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100] ${
             isFilterOpen ? "h-[566px]" : "h-0"
@@ -179,11 +175,15 @@ export default function Header({
                 <br />
                 カテゴリーを選択してください。
               </p>
-              <p className="text-[14px] mt-[4px] text-center">※複数設定可能</p>
               <div className="flex justify-center w-full px-[8px] mt-[20px]">
-                <div className="grid grid-cols-[repeat(3,min-content)] w-full max-w-[375px] justify-center gap-x-[clamp(8px,4vw,16px)] gap-y-[12px]">
-                  {filterOptions.map((option, index) => {
-                    const inputElement = (
+                <div className="grid grid-cols-[repeat(3,min-content)] w-full max-w-[375px] justify-center gap-x-[16px] gap-y-[12px]">
+                  {filterOptions.map((option, index) => (
+                    <div
+                      key={option.id}
+                      className={
+                        index === 0 ? "col-span-3 flex justify-start" : "w-fit"
+                      }
+                    >
                       <CustomInput
                         {...option}
                         type="checkbox"
@@ -193,24 +193,8 @@ export default function Header({
                           handleCheckboxChange(option.id, e.target.checked)
                         }
                       />
-                    );
-                    if (index === 0) {
-                      return (
-                        <React.Fragment key={option.id}>
-                          <div className="col-start-1 w-fit h-fit">
-                            {inputElement}
-                          </div>
-                          <div className="col-start-2"></div>
-                          <div className="col-start-3"></div>
-                        </React.Fragment>
-                      );
-                    }
-                    return (
-                      <div key={option.id} className="w-fit h-fit">
-                        {inputElement}
-                      </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="flex flex-col items-center mt-10 space-y-[12px]">
@@ -230,11 +214,10 @@ export default function Header({
           </div>
         </div>
       </header>
-
       {isFilterOpen && (
         <div
           className="fixed inset-0 bg-[#999999]/80 z-[90]"
-          onClick={handleOverlayClick}
+          onClick={cancelFilter}
         />
       )}
     </>
