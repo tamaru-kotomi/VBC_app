@@ -33,11 +33,11 @@ model Schedule {
 
 // ユーザー・管理者のモデル（将来のログイン機能用）
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  isAdmin       Boolean   @default(false) // 管理者（予定を書き込める人）かどうか
-  grade         Int?      // ジュニアの学年
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  // Prismaでは数値型は Int を使用します
+  grades    Int[]    // 子供の学年（例: [1, 4]）
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

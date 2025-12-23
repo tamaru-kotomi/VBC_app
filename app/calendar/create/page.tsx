@@ -13,6 +13,59 @@ import { Modal } from "../../components/Modal";
 import { TargetLabel } from "../../components/TargetLabel";
 import DetailTable from "../../components/DetailTable";
 
+// 対象カテゴリーごとの色定義（復元）
+const targetOptions = [
+  {
+    id: "ALL",
+    name: "ALL",
+    selectedColor: "#8BC34A",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#8BC34A",
+  },
+  {
+    id: "boys",
+    name: "男子",
+    selectedColor: "#3C2465",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#3C2465",
+  },
+  {
+    id: "boysA",
+    name: "男子A",
+    selectedColor: "#673AB7",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#673AB7",
+  },
+  {
+    id: "boysB",
+    name: "男子B",
+    selectedColor: "#FFFFFF",
+    selectedTextColor: "#673AB7",
+    selectedBorderColor: "#673AB7",
+  },
+  {
+    id: "girls",
+    name: "女子",
+    selectedColor: "#811C1C",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#811C1C",
+  },
+  {
+    id: "girlsA",
+    name: "女子A",
+    selectedColor: "#D32F2F",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#D32F2F",
+  },
+  {
+    id: "girlsB",
+    name: "女子B",
+    selectedColor: "#FFFFFF",
+    selectedTextColor: "#D32F2F",
+    selectedBorderColor: "#D32F2F",
+  },
+];
+
 export default function CreateSchedulePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -90,11 +143,11 @@ export default function CreateSchedulePage() {
         router.push("/calendar");
         router.refresh();
       } else {
-        setIsSubmitting(false);
         alert("保存に失敗しました。");
       }
     } catch (error) {
       console.error(error);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -110,6 +163,7 @@ export default function CreateSchedulePage() {
           showClose={false}
         />
       </div>
+
       <div className="w-full max-w-[375px]">
         <main className="px-[16px] py-[36px] flex flex-col gap-[36px]">
           <FormItem label="日付" required error={error}>
@@ -203,23 +257,30 @@ export default function CreateSchedulePage() {
             </div>
           </FormItem>
 
+          {/* 修正：対象カテゴリーのデザイン（個別カラー適用） */}
           <FormItem label="対象" required>
-            <div className="grid grid-cols-3 gap-x-[8px] gap-y-[12px]">
-              {[
-                { id: "ALL", name: "ALL" },
-                { id: "boys", name: "男子" },
-                { id: "girls", name: "女子" },
-              ].map((opt) => (
-                <CustomInput
+            <div className="grid grid-cols-3 gap-x-[16px] gap-y-[12px]">
+              {targetOptions.map((opt, index) => (
+                <div
                   key={opt.id}
-                  type="radio"
-                  id={opt.id}
-                  name="target_group"
-                  value={opt.id}
-                  label={opt.name}
-                  checked={target === opt.id}
-                  onChange={() => setTarget(opt.id)}
-                />
+                  className={
+                    index === 0 ? "col-span-3 flex justify-start pl-[4px]" : ""
+                  }
+                >
+                  <CustomInput
+                    type="radio"
+                    id={opt.id}
+                    name="target_group"
+                    value={opt.id}
+                    label={opt.name}
+                    checked={target === opt.id}
+                    onChange={() => setTarget(opt.id)}
+                    // ここで個別の色情報を渡す
+                    selectedColor={opt.selectedColor}
+                    selectedTextColor={opt.selectedTextColor}
+                    selectedBorderColor={opt.selectedBorderColor}
+                  />
+                </div>
               ))}
             </div>
           </FormItem>
@@ -234,7 +295,8 @@ export default function CreateSchedulePage() {
             />
           </FormItem>
 
-          <div className="flex flex-col items-center mt-[12px] gap-[24px]">
+          {/* 修正：ボタンサイズとフォントサイズ（w-220px, h-44px, text-16px） */}
+          <div className="flex flex-col items-center mt-[12px] gap-[24px] pb-[60px]">
             <Button
               label="CHECK"
               activeBgColor="#090C26"
@@ -254,12 +316,14 @@ export default function CreateSchedulePage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         buttons={
-          <Button
-            label={isNew ? "ADD" : "EDIT"}
-            activeBgColor="#090C26"
-            onClick={handleRegister}
-            disabled={isSubmitting}
-          />
+          <div className="flex justify-center w-full">
+            <Button
+              label={isNew ? "ADD" : "EDIT"}
+              activeBgColor="#090C26"
+              onClick={handleRegister}
+              disabled={isSubmitting}
+            />
+          </div>
         }
       >
         <div className="flex flex-col">
