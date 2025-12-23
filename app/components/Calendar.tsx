@@ -1,189 +1,269 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   format,
-  addMonths,
-  subMonths,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  startOfWeek,
-  endOfWeek,
   isSameDay,
   isSameMonth,
-  isBefore,
   isAfter,
+  isBefore,
+  startOfDay,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  subMonths,
+  addMonths,
 } from "date-fns";
 import Image from "next/image";
 import Header from "../components/Header";
+import DetailTable from "./DetailTable";
+import { TargetLabel } from "./TargetLabel";
+import { Modal } from "./Modal";
+import Button from "../components/Button";
+import { Schedule } from "./CalendarWrapper"; // Wrapperから型をインポート
 
-interface Schedule {
-  id: string;
-  title: string;
-  date: Date | string;
-  target: string;
+const targetStyles: Record<
+  string,
+  { bg: string; text: string; border: string; name: string }
+> = {
+  ALL: { bg: "#8BC34A", text: "#FFFFFF", border: "#8BC34A", name: "ALL" },
+  boys: { bg: "#3C2465", text: "#FFFFFF", border: "#3C2465", name: "男子" },
+  boysA: { bg: "#673AB7", text: "#FFFFFF", border: "#673AB7", name: "男子A" },
+  boysB: { bg: "#FFFFFF", text: "#673AB7", border: "#673AB7", name: "男子B" },
+  girls: { bg: "#811C1C", text: "#FFFFFF", border: "#811C1C", name: "女子" },
+  girlsA: { bg: "#D32F2F", text: "#FFFFFF", border: "#D32F2F", name: "女子A" },
+  girlsB: { bg: "#FFFFFF", text: "#D32F2F", border: "#D32F2F", name: "女子B" },
+};
+
+interface CalendarProps {
+  initialSchedules: Schedule[];
+  activeFilters: string[];
 }
 
 export default function Calendar({
   initialSchedules,
-}: {
-  initialSchedules: Schedule[];
-}) {
+  activeFilters,
+}: CalendarProps) {
   const router = useRouter();
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today);
+  const today = startOfDay(new Date());
+
+  const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
-  // 表示可能範囲（当月の前後1ヶ月）
-  const minMonth = startOfMonth(subMonths(today, 1));
-  const maxMonth = startOfMonth(addMonths(today, 1));
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingSchedule, setDeletingSchedule] = useState<Schedule | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // カレンダー計算（月曜日始まり）
+  useEffect(() => {
+    setSchedules(initialSchedules);
+  }, [initialSchedules]);
+
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-
   const calendarDays = eachDayOfInterval({
-    start: calendarStart,
-    end: calendarEnd,
+    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+    end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
   });
 
-  // 前月・次月ボタンの活性判定
-  const canGoPrev = isAfter(monthStart, minMonth);
-  const canGoNext = isBefore(monthStart, maxMonth);
+  const canGoPrev = isAfter(monthStart, startOfMonth(subMonths(new Date(), 1)));
+  const canGoNext = isBefore(
+    monthStart,
+    startOfMonth(addMonths(new Date(), 1))
+  );
+  const isSelectedPast = selectedDay
+    ? isBefore(startOfDay(selectedDay), today)
+    : false;
 
-  const prevMonth = () =>
-    canGoPrev && setCurrentMonth(subMonths(currentMonth, 1));
-  const nextMonth = () =>
-    canGoNext && setCurrentMonth(addMonths(currentMonth, 1));
-
-  // 曜日の色を取得する関数
-  const getDayColor = (date: Date) => {
-    const dayEn = format(date, "EEE").toUpperCase(); // "SAT", "SUN" 等
-    if (dayEn === "SUN") return "#C20000";
-    if (dayEn === "SAT") return "#5343CD";
-    return "#090C26";
+  const getFilteredSchedules = (list: Schedule[]) => {
+    return list.filter((s) => activeFilters.includes(s.targetId));
   };
 
-  // 登録画面へ遷移する関数
   const handleAddSchedule = () => {
-    if (selectedDay) {
+    if (selectedDay && !isSelectedPast) {
       const dateStr = format(selectedDay, "yyyy-MM-dd");
       router.push(`/calendar/create?date=${dateStr}&isNew=true`);
     }
   };
 
+  const handleEdit = (schedule: Schedule) => {
+    const dateObj = new Date(schedule.date);
+    const params = new URLSearchParams({
+      id: schedule.id,
+      date: format(dateObj, "yyyy-MM-dd"),
+      title: schedule.title || "",
+      time: schedule.time || "",
+      location: schedule.location || "",
+      otherLocation: schedule.otherLocation || "",
+      target: schedule.targetId,
+      content: schedule.content || "",
+      isNew: "false",
+    });
+    router.push(`/calendar/create?${params.toString()}`);
+  };
+
+  const confirmDelete = (schedule: Schedule) => {
+    setDeletingSchedule(schedule);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingSchedule || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/schedules/${deletingSchedule.id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setSchedules((prev) =>
+          prev.filter((s) => s.id !== deletingSchedule.id)
+        );
+        setIsDeleteModalOpen(false);
+        setDeletingSchedule(null);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const getDayColor = (date: Date) => {
+    const dayEn = format(date, "EEE").toUpperCase();
+    if (dayEn === "SUN") return "#C20000";
+    if (dayEn === "SAT") return "#5343CD";
+    return "#090C26";
+  };
+
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
-      {/* 1. 年月ナビゲーション */}
-      <div className="flex items-end justify-between mb-6 w-full">
+      {/* 年月ナビ */}
+      <div className="flex items-center justify-between mb-6 w-full px-[8px]">
         <button
-          onClick={prevMonth}
-          disabled={!canGoPrev}
-          className={`flex items-end text-[20px] font-bold transition-colors leading-none ${
-            !canGoPrev ? "cursor-not-allowed" : "hover:opacity-60"
+          onClick={() =>
+            canGoPrev && setCurrentMonth(subMonths(currentMonth, 1))
+          }
+          className={`flex items-center gap-[4px] text-[20px] font-bold ${
+            !canGoPrev ? "opacity-50" : ""
           }`}
-          style={{ color: canGoPrev ? "#090C26" : "#999999" }}
         >
-          <div className="relative w-[18px] h-[18px] mr-[4px] mb-[2px]">
-            <Image
-              src={
-                canGoPrev
-                  ? "/images/icons/icon_prev.png"
-                  : "/images/icons/icon_prev_gray.png"
-              }
-              alt="前月"
-              width={18}
-              height={18}
-            />
-          </div>
-          前月
+          <Image
+            src={
+              canGoPrev
+                ? "/images/icons/icon_prev.png"
+                : "/images/icons/icon_prev_gray.png"
+            }
+            alt="前"
+            width={18}
+            height={18}
+          />
+          <span>前月</span>
         </button>
-
-        <h2 className="text-[36px] font-bold tracking-tighter leading-none text-[#090C26]">
+        <h2 className="text-[36px] font-bold tracking-tighter leading-none">
           {format(currentMonth, "yyyy/MM")}
         </h2>
-
         <button
-          onClick={nextMonth}
-          disabled={!canGoNext}
-          className={`flex items-end text-[20px] font-bold transition-colors leading-none ${
-            !canGoNext ? "cursor-not-allowed" : "hover:opacity-60"
+          onClick={() =>
+            canGoNext && setCurrentMonth(addMonths(currentMonth, 1))
+          }
+          className={`flex items-center gap-[4px] text-[20px] font-bold ${
+            !canGoNext ? "opacity-50" : ""
           }`}
-          style={{ color: canGoNext ? "#090C26" : "#999999" }}
         >
-          次月
-          <div className="relative w-[18px] h-[18px] ml-[4px] mb-[2px]">
-            <Image
-              src={
-                canGoNext
-                  ? "/images/icons/icon_next.png"
-                  : "/images/icons/icon_next_gray.png"
-              }
-              alt="次月"
-              width={18}
-              height={18}
-            />
-          </div>
+          <span>次月</span>
+          <Image
+            src={
+              canGoNext
+                ? "/images/icons/icon_next.png"
+                : "/images/icons/icon_next_gray.png"
+            }
+            alt="次"
+            width={18}
+            height={18}
+          />
         </button>
       </div>
 
-      {/* 2. 曜日ヘッダー */}
-      <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold leading-none">
-        {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => {
-          let textColor = "#090C26";
-          if (day === "SUN") textColor = "#C20000";
-          if (day === "SAT") textColor = "#5343CD";
-          return (
-            <div key={day} style={{ color: textColor }}>
-              {day}
-            </div>
-          );
-        })}
+      {/* 曜日表示 */}
+      <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
+        {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
+          <div
+            key={day}
+            style={{
+              color:
+                day === "SUN"
+                  ? "#C20000"
+                  : day === "SAT"
+                  ? "#5343CD"
+                  : "#090C26",
+            }}
+          >
+            {day}
+          </div>
+        ))}
       </div>
 
-      {/* 3. カレンダーグリッド */}
+      {/* カレンダー本体 */}
       <div className="border-[2px] border-[#9D9D9D] bg-[#9D9D9D] grid grid-cols-7 gap-[1px] overflow-hidden rounded-[2px]">
         {calendarDays.map((day) => {
-          const daySchedules = initialSchedules.filter((s) =>
+          const rawDaySchedules = schedules.filter((s) =>
             isSameDay(new Date(s.date), day)
           );
+          const daySchedules = getFilteredSchedules(rawDaySchedules);
           const isCurrentMonth = isSameMonth(day, monthStart);
 
           return (
             <div
               key={day.toString()}
               onClick={() => setSelectedDay(day)}
-              className="relative h-[142px] bg-white cursor-pointer hover:bg-slate-50 transition-colors"
+              className="relative h-[142px] bg-white cursor-pointer hover:bg-slate-50"
             >
               <span
-                className={`absolute left-[4px] top-[4px] text-[16px] font-bold leading-none ${
+                className={`absolute left-[4px] top-[4px] text-[16px] font-bold ${
                   !isCurrentMonth ? "text-[#9D9D9D]" : "text-[#090C26]"
                 }`}
               >
                 {format(day, "d")}
               </span>
-              <div className="mt-[24px] flex flex-col gap-[2px] px-[2px]">
-                {daySchedules.map((item) => (
-                  <div
-                    key={item.id}
-                    className="text-[10px] py-[1px] px-[4px] rounded-[2px] bg-[#090C26] text-white truncate"
-                  >
-                    {item.target}
-                  </div>
-                ))}
+              <div className="mt-[24px] flex flex-col items-center">
+                {daySchedules.map((item) => {
+                  const style = targetStyles[item.targetId] || targetStyles.ALL;
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-center border font-bold"
+                      style={{
+                        width: "44px",
+                        fontSize: "12px",
+                        borderRadius: "20px",
+                        backgroundColor: style.bg,
+                        color: style.text,
+                        borderColor: style.border,
+                        borderWidth: "1px",
+                        padding: "2px 0",
+                        marginTop: "4px",
+                        lineHeight: "1",
+                        textAlign: "center",
+                      }}
+                    >
+                      {style.name}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* 4. 詳細スライドイン (100vh) */}
+      {/* 詳細スライドインモーダル */}
       <div
-        className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] ${
+        className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ${
           selectedDay ? "translate-y-0" : "translate-y-full"
         }`}
       >
@@ -192,12 +272,10 @@ export default function Calendar({
           onClose={() => setSelectedDay(null)}
           title="詳細"
         />
-
-        <main className="py-[36px] px-[16px] h-[calc(100vh-120px)] overflow-y-auto relative">
+        <main className="py-[36px] px-[16px] h-[calc(100vh-120px)] overflow-y-auto">
           {selectedDay && (
             <div className="flex flex-col items-center">
-              {/* 日付表示 */}
-              <h3 className="text-[36px] font-bold tracking-tighter leading-none mb-[24px] text-[#090C26]">
+              <h3 className="text-[36px] font-bold tracking-tighter mb-[24px]">
                 {format(selectedDay, "yyyy/MM/dd")}
                 <span>（</span>
                 <span style={{ color: getDayColor(selectedDay) }}>
@@ -206,28 +284,159 @@ export default function Calendar({
                 <span>）</span>
               </h3>
 
-              {/* コンテンツエリア */}
-              <div className="w-full px-[16px]">
-                {/* 予定リスト表示エリア */}
+              <div className="w-full space-y-10 pb-[120px]">
+                {(() => {
+                  const rawDaySchedules = schedules.filter((s) =>
+                    isSameDay(new Date(s.date), selectedDay)
+                  );
+                  const filteredSchedules =
+                    getFilteredSchedules(rawDaySchedules);
+
+                  if (filteredSchedules.length === 0) {
+                    return (
+                      <div className="w-full text-center">
+                        <p className="text-[16px] font-bold text-[#090C26]">
+                          現在、表示できるスケジュールはありません。
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return filteredSchedules.map((schedule) => {
+                    const isPast = isBefore(
+                      startOfDay(new Date(schedule.date)),
+                      today
+                    );
+                    return (
+                      <div key={schedule.id} className="w-full">
+                        <div className="flex justify-between items-center mb-[8px]">
+                          <TargetLabel targetId={schedule.targetId} />
+                          <div className="flex gap-[16px]">
+                            <button
+                              onClick={() => !isPast && handleEdit(schedule)}
+                              disabled={isPast}
+                              className="flex flex-col items-center gap-[2px]"
+                            >
+                              <Image
+                                src={
+                                  isPast
+                                    ? "/images/icons/icon_edit_gray.png"
+                                    : "/images/icons/icon_edit.png"
+                                }
+                                alt="編集"
+                                width={32}
+                                height={32}
+                              />
+                              <span
+                                className="text-[12px] font-bold"
+                                style={{
+                                  color: isPast ? "#999999" : "#090C26",
+                                }}
+                              >
+                                編集
+                              </span>
+                            </button>
+                            <button
+                              onClick={() => confirmDelete(schedule)}
+                              className="flex flex-col items-center gap-[2px]"
+                            >
+                              <Image
+                                src="/images/icons/icon_trash.png"
+                                alt="削除"
+                                width={32}
+                                height={32}
+                              />
+                              <span className="text-[12px] font-bold text-[#090C26]">
+                                削除
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                        <DetailTable
+                          targetId={schedule.targetId}
+                          items={[
+                            { label: "タイトル", value: schedule.title || "" },
+                            { label: "時間", value: schedule.time || "未設定" },
+                            {
+                              label: "場所",
+                              value:
+                                schedule.location === "その他"
+                                  ? schedule.otherLocation || "未設定"
+                                  : schedule.location || "未設定",
+                            },
+                            {
+                              label: "内容・連絡事項",
+                              value: schedule.content || "-",
+                            },
+                          ]}
+                        />
+                      </div>
+                    );
+                  });
+                })()}
               </div>
 
-              {/* 追従プラスアイコン: 右16px, 下36px */}
-              {/* mainの中に置くことでスライドイン内でのみ追従させます */}
+              {/* 復元：プラス追従アイコン */}
               <button
-                onClick={handleAddSchedule}
-                className="fixed right-[16px] bottom-[36px] w-[60px] h-[60px] hover:opacity-80 transition-opacity drop-shadow-lg"
+                onClick={() => !isSelectedPast && handleAddSchedule()}
+                disabled={isSelectedPast}
+                className={`fixed right-[16px] bottom-[36px] z-[120] ${
+                  isSelectedPast ? "cursor-not-allowed opacity-50" : ""
+                }`}
               >
                 <Image
-                  src="/images/icons/icon_plus.png"
-                  alt="予定を追加"
-                  width={60}
-                  height={60}
+                  src={
+                    isSelectedPast
+                      ? "/images/icons/icon_plus_gray.png"
+                      : "/images/icons/icon_plus.png"
+                  }
+                  alt="追加"
+                  width={96}
+                  height={96}
                 />
               </button>
             </div>
           )}
         </main>
       </div>
+
+      {/* 削除確認モーダル */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        buttons={
+          <div className="flex flex-row gap-[16px] justify-center w-full">
+            <Button
+              label="YES"
+              activeBgColor="#090C26"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            />
+            <Button
+              label="NO"
+              activeBgColor="#143875"
+              onClick={() => setIsDeleteModalOpen(false)}
+            />
+          </div>
+        }
+      >
+        <div className="py-[20px] text-center flex flex-col items-center gap-[4px]">
+          {deletingSchedule && (
+            <>
+              <p className="text-[16px] font-bold text-[#090C26] leading-tight">
+                {format(new Date(deletingSchedule.date), "yyyy/MM/dd")}{" "}
+                {targetStyles[deletingSchedule.targetId]?.name || ""}
+              </p>
+              <p className="text-[16px] font-bold text-[#090C26] leading-tight">
+                「{deletingSchedule.title}」
+              </p>
+              <p className="text-[16px] font-bold text-[#090C26] leading-tight mt-[8px]">
+                の予定を本当に削除しますか？
+              </p>
+            </>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

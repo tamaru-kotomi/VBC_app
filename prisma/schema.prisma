@@ -19,13 +19,16 @@ enum Target {
 
 // 練習予定（スケジュール）のモデル
 model Schedule {
-  id        String   @id @default(cuid())
-  date      DateTime // 予定日
-  title     String   // 練習内容（例：通常練習、練習試合）
-  location  String   // 場所（例：〇〇小学校、△△スポーツセンター）
-  target    Target   @default(ALL) // 対象（全員、ジュニア、レディース）
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  date          DateTime // 日付
+  title         String   // 予定タイトル
+  time          String?  // 時間
+  location      String?  // 場所
+  otherLocation String?  // その他場所
+  targetId      String   @default("ALL") 
+  content       String?  // 内容・連絡事項
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // ユーザー・管理者のモデル（将来のログイン機能用）

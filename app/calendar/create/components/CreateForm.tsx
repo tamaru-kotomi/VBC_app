@@ -289,6 +289,7 @@ export default function CreateForm() {
                 "【AM】09:00 ~ 12:00",
                 "【PM】13:00 ~ 15:00",
                 "【PM】13:00 ~ 17:30",
+                "【PM】19:00 ~ 21:00",
                 "その他",
               ].map((opt) => (
                 <option key={opt} value={opt}>
