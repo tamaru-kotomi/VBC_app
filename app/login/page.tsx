@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { signIn } from "next-auth/react";
 import Button from "../components/Button";
 import { CommonInput } from "../components/CommonInput";
 
@@ -23,22 +24,20 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        router.push("/calendar");
+      if (result?.error) {
+        setError("メールアドレスまたはパスワードが違います");
+        setIsLoading(false);
       } else {
-        setError(data.message);
+        window.location.href = "/calendar";
       }
     } catch (err) {
       setError("通信エラーが発生しました。");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -48,17 +47,18 @@ export default function LoginPage() {
       <main className="w-full max-w-[375px] px-[24px]">
         <form onSubmit={handleSubmit} className="flex flex-col items-center">
           {/* ロゴ */}
-          <Image
-            src="/images/icons/logo.png"
-            alt="Logo"
-            width={200}
-            height={200}
-            priority
-          />
+          <div className="relative w-[200px] h-[200px]">
+            <Image
+              src="/images/icons/logo.png"
+              alt="Logo"
+              fill
+              style={{ objectFit: "contain" }}
+              priority
+            />
+          </div>
 
-          {/* メールアドレス入力欄（ロゴとの余白 52px） */}
+          {/* メールアドレス入力欄 */}
           <div className="w-full mt-[52px] flex flex-col relative">
-            {/* エラーメッセージ（入力枠の上8pxに固定表示。h-[21px]は14pxフォントの概ねの高さ） */}
             <div className="absolute top-[-29px] left-0 h-[21px]">
               {error && (
                 <p className="text-[#D32F2F] text-[14px] font-normal">
@@ -76,7 +76,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* パスワード入力欄（メールアドレス欄との余白 24px） */}
+          {/* パスワード入力欄 */}
           <div className="w-full mt-[24px]">
             <CommonInput
               type="password"
@@ -87,8 +87,8 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* ログインボタン（パスワード欄との余白 32px） */}
-          <div className="mt-[32px]">
+          {/* ログインボタン */}
+          <div className="mt-[32px] w-full flex justify-center">
             <Button
               label={isLoading ? "LOADING..." : "LOGIN"}
               onClick={() => {}}

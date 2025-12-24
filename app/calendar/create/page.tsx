@@ -217,8 +217,12 @@ export default function CreateSchedulePage() {
               <option value="">選択してください</option>
               {[
                 "【全日】08:30 ~ 17:30",
+                "【全日】09:00 ~ 17:30",
                 "【AM】08:30 ~ 12:00",
+                "【AM】09:00 ~ 12:00",
+                "【PM】13:00 ~ 15:00",
                 "【PM】13:00 ~ 17:30",
+                "【PM】19:00 ~ 21:00",
                 "その他",
               ].map((opt) => (
                 <option key={opt} value={opt}>
@@ -238,13 +242,20 @@ export default function CreateSchedulePage() {
                 onChange={(e) => setLocation(e.target.value)}
               >
                 <option value="">選択してください</option>
-                {["佐原小", "香取中", "北佐原小", "佐原五中", "その他"].map(
-                  (opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  )
-                )}
+                {[
+                  "佐原小",
+                  "香取中",
+                  "北佐原小",
+                  "佐原五中",
+                  "小見川BG",
+                  "栗源BG",
+                  "山田BG",
+                  "その他",
+                ].map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
               </select>
               <CommonInput
                 disabled={location !== "その他"}
