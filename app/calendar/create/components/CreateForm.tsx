@@ -328,20 +328,62 @@ export default function CreateForm() {
                   </option>
                 ))}
               </select>
-              <input
-                type="text"
-                disabled={location !== "その他"}
-                placeholder="その他場所を入力してください"
-                className={`${inputBaseClass} h-[52px] placeholder:text-[#999999] ${
-                  location === "その他"
-                    ? `bg-white ${getTextColor(otherLocation)}`
-                    : "bg-[#D9D9D9] text-transparent cursor-not-allowed border-[#9D9D9D]"
-                }`}
-                value={otherLocation}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setOtherLocation(e.target.value)
-                }
-              />
+
+              {/* 【最終手段】inputを使わずに見た目を作ることで、ブラウザの薄くする機能を物理的に封鎖 */}
+              <div
+                style={{
+                  width: "100%",
+                  height: "52px",
+                  padding: "0 8px",
+                  fontSize: "20px",
+                  borderRadius: "4px",
+                  border: "1px solid #9D9D9D",
+                  display: "flex",
+                  alignItems: "center",
+                  boxSizing: "border-box",
+                  backgroundColor:
+                    location === "その他" ? "#FFFFFF" : "#D9D9D9",
+                  transition: "all 0.2s",
+                }}
+              >
+                {location === "その他" ? (
+                  <input
+                    type="text"
+                    placeholder="その他場所を入力してください"
+                    value={otherLocation}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setOtherLocation(e.target.value)
+                    }
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                      outline: "none",
+                      backgroundColor: "transparent",
+                      fontSize: "20px",
+                      fontWeight: "500",
+                      // 入力中かplaceholderかで色を分ける
+                      color: otherLocation === "" ? "#999999" : "#090C26",
+                      // 下記はiOS/Safariでの「勝手に薄くなる」のを防ぐ最重要プロパティ
+                      WebkitTextFillColor:
+                        otherLocation === "" ? "#999999" : "#090C26",
+                    }}
+                  />
+                ) : (
+                  /* 非活性時は input ではなくただの「文字」として描画。これで薄くなることは絶対にありません */
+                  <span
+                    style={{
+                      color: "#999999",
+                      fontSize: "20px",
+                      fontWeight: "500",
+                      userSelect: "none",
+                      WebkitTextFillColor: "#999999", // 文字色を強制
+                    }}
+                  >
+                    その他場所を入力してください
+                  </span>
+                )}
+              </div>
             </div>
           </section>
 

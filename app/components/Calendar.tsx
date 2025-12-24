@@ -23,7 +23,7 @@ import DetailTable from "./DetailTable";
 import { TargetLabel } from "./TargetLabel";
 import { Modal } from "./Modal";
 import Button from "../components/Button";
-import { Schedule } from "./CalendarWrapper"; // Wrapperから型をインポート
+import { Schedule } from "./CalendarWrapper";
 
 const targetStyles: Record<
   string,
@@ -41,11 +41,13 @@ const targetStyles: Record<
 interface CalendarProps {
   initialSchedules: Schedule[];
   activeFilters: string[];
+  isAdmin: boolean; // ★ 追加
 }
 
 export default function Calendar({
   initialSchedules,
   activeFilters,
+  isAdmin, // ★ 追加
 }: CalendarProps) {
   const router = useRouter();
   const today = startOfDay(new Date());
@@ -311,46 +313,49 @@ export default function Calendar({
                       <div key={schedule.id} className="w-full">
                         <div className="flex justify-between items-center mb-[8px]">
                           <TargetLabel targetId={schedule.targetId} />
-                          <div className="flex gap-[16px]">
-                            <button
-                              onClick={() => !isPast && handleEdit(schedule)}
-                              disabled={isPast}
-                              className="flex flex-col items-center gap-[2px]"
-                            >
-                              <Image
-                                src={
-                                  isPast
-                                    ? "/images/icons/icon_edit_gray.png"
-                                    : "/images/icons/icon_edit.png"
-                                }
-                                alt="編集"
-                                width={32}
-                                height={32}
-                              />
-                              <span
-                                className="text-[12px] font-bold"
-                                style={{
-                                  color: isPast ? "#999999" : "#090C26",
-                                }}
+                          {/* ★ 管理者のみ編集・削除ボタンを表示 */}
+                          {isAdmin && (
+                            <div className="flex gap-[16px]">
+                              <button
+                                onClick={() => !isPast && handleEdit(schedule)}
+                                disabled={isPast}
+                                className="flex flex-col items-center gap-[2px]"
                               >
-                                編集
-                              </span>
-                            </button>
-                            <button
-                              onClick={() => confirmDelete(schedule)}
-                              className="flex flex-col items-center gap-[2px]"
-                            >
-                              <Image
-                                src="/images/icons/icon_trash.png"
-                                alt="削除"
-                                width={32}
-                                height={32}
-                              />
-                              <span className="text-[12px] font-bold text-[#090C26]">
-                                削除
-                              </span>
-                            </button>
-                          </div>
+                                <Image
+                                  src={
+                                    isPast
+                                      ? "/images/icons/icon_edit_gray.png"
+                                      : "/images/icons/icon_edit.png"
+                                  }
+                                  alt="編集"
+                                  width={32}
+                                  height={32}
+                                />
+                                <span
+                                  className="text-[12px] font-bold"
+                                  style={{
+                                    color: isPast ? "#999999" : "#090C26",
+                                  }}
+                                >
+                                  編集
+                                </span>
+                              </button>
+                              <button
+                                onClick={() => confirmDelete(schedule)}
+                                className="flex flex-col items-center gap-[2px]"
+                              >
+                                <Image
+                                  src="/images/icons/icon_trash.png"
+                                  alt="削除"
+                                  width={32}
+                                  height={32}
+                                />
+                                <span className="text-[12px] font-bold text-[#090C26]">
+                                  削除
+                                </span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                         <DetailTable
                           targetId={schedule.targetId}
@@ -376,25 +381,27 @@ export default function Calendar({
                 })()}
               </div>
 
-              {/* 復元：プラス追従アイコン */}
-              <button
-                onClick={() => !isSelectedPast && handleAddSchedule()}
-                disabled={isSelectedPast}
-                className={`fixed right-[16px] bottom-[36px] z-[120] ${
-                  isSelectedPast ? "cursor-not-allowed opacity-50" : ""
-                }`}
-              >
-                <Image
-                  src={
-                    isSelectedPast
-                      ? "/images/icons/icon_plus_gray.png"
-                      : "/images/icons/icon_plus.png"
-                  }
-                  alt="追加"
-                  width={96}
-                  height={96}
-                />
-              </button>
+              {/* ★ 管理者のみプラス追従アイコンを表示 */}
+              {isAdmin && (
+                <button
+                  onClick={() => !isSelectedPast && handleAddSchedule()}
+                  disabled={isSelectedPast}
+                  className={`fixed right-[16px] bottom-[36px] z-[120] ${
+                    isSelectedPast ? "cursor-not-allowed opacity-50" : ""
+                  }`}
+                >
+                  <Image
+                    src={
+                      isSelectedPast
+                        ? "/images/icons/icon_plus_gray.png"
+                        : "/images/icons/icon_plus.png"
+                    }
+                    alt="追加"
+                    width={96}
+                    height={96}
+                  />
+                </button>
+              )}
             </div>
           )}
         </main>

@@ -4,9 +4,11 @@ interface ButtonProps {
   label: string;
   onClick: () => void;
   disabled?: boolean;
-  activeBgColor?: string; // 活性時の背景色（例: "#090C26"）
-  activeTextColor?: string; // 活性時の文字色（デフォルトは白）
-  className?: string; // 追加のスタイル調整用（任意）
+  activeBgColor?: string; // 活性時の背景色
+  activeTextColor?: string; // 活性時の文字色
+  className?: string; // 追加のスタイル調整用
+  // ↓ 型エラー解消のために追加
+  type?: "button" | "submit" | "reset";
 }
 
 export default function Button({
@@ -16,13 +18,13 @@ export default function Button({
   activeBgColor = "#090C26",
   activeTextColor = "#ffffff",
   className = "",
+  type = "button", // デフォルトは button
 }: ButtonProps) {
   return (
     <button
-      type="button"
+      type={type} // 渡された type を適用
       onClick={onClick}
       disabled={disabled}
-      /* スタイル指定 */
       className={`
         /* 共通スタイル: 250x58px, 24px, bold, 8px角丸, 中央揃え */
         w-[250px] h-[58px] 
@@ -35,7 +37,6 @@ export default function Button({
         
         ${className}
       `}
-      /* 活性時の背景色・文字色は動的に適用 */
       style={
         !disabled
           ? {

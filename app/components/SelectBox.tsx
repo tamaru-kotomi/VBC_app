@@ -6,9 +6,10 @@ interface SelectBoxProps {
   value: string;
   onChange: (value: string) => void;
   options: string[];
-  suffix: string;
+  suffix?: string; // 任意（?）に変更：時間や場所では suffix が不要なため
   width: string;
   bgColor?: string;
+  placeholder?: string; // 追加：型エラーを解消するため
 }
 
 export const SelectBox = ({
@@ -18,10 +19,12 @@ export const SelectBox = ({
   suffix,
   width,
   bgColor = "white",
+  placeholder, // 追加
 }: SelectBoxProps) => {
   const selectIconStyle = {
     backgroundImage: "url('/images/icons/icon_pulldown.png')",
   };
+
   return (
     <div className="flex items-end gap-[4px]">
       <select
@@ -32,15 +35,26 @@ export const SelectBox = ({
           onChange(e.target.value)
         }
       >
+        {/* placeholder が渡された場合、未選択用の option として表示 */}
+        {placeholder && (
+          <option value="" disabled={value !== ""}>
+            {placeholder}
+          </option>
+        )}
+
         {options.map((opt) => (
           <option key={opt} value={opt}>
             {opt}
           </option>
         ))}
       </select>
-      <span className="text-[20px] font-normal text-[#090C26] leading-[1.2]">
-        {suffix}
-      </span>
+
+      {/* suffix がある場合のみ表示 */}
+      {suffix && (
+        <span className="text-[20px] font-normal text-[#090C26] leading-[1.2]">
+          {suffix}
+        </span>
+      )}
     </div>
   );
 };

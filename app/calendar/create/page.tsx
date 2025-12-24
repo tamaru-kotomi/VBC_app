@@ -8,10 +8,63 @@ import CustomInput from "../../components/CustomInput";
 import Button from "../../components/Button";
 import { FormItem } from "../../components/FormItem";
 import { CommonInput } from "../../components/CommonInput";
-import { SelectBox } from "../../components/SelectBox";
+import { SelectBox } from "../../components/SelectBox"; // コンポーネントを使用
 import { Modal } from "../../components/Modal";
 import { TargetLabel } from "../../components/TargetLabel";
 import DetailTable from "../../components/DetailTable";
+
+// 対象カテゴリーごとの色定義
+const targetOptions = [
+  {
+    id: "ALL",
+    name: "ALL",
+    selectedColor: "#8BC34A",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#8BC34A",
+  },
+  {
+    id: "boys",
+    name: "男子",
+    selectedColor: "#3C2465",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#3C2465",
+  },
+  {
+    id: "boysA",
+    name: "男子A",
+    selectedColor: "#673AB7",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#673AB7",
+  },
+  {
+    id: "boysB",
+    name: "男子B",
+    selectedColor: "#FFFFFF",
+    selectedTextColor: "#673AB7",
+    selectedBorderColor: "#673AB7",
+  },
+  {
+    id: "girls",
+    name: "女子",
+    selectedColor: "#811C1C",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#811C1C",
+  },
+  {
+    id: "girlsA",
+    name: "女子A",
+    selectedColor: "#D32F2F",
+    selectedTextColor: "#FFFFFF",
+    selectedBorderColor: "#D32F2F",
+  },
+  {
+    id: "girlsB",
+    name: "女子B",
+    selectedColor: "#FFFFFF",
+    selectedTextColor: "#D32F2F",
+    selectedBorderColor: "#D32F2F",
+  },
+];
 
 export default function CreateSchedulePage() {
   const router = useRouter();
@@ -90,11 +143,11 @@ export default function CreateSchedulePage() {
         router.push("/calendar");
         router.refresh();
       } else {
-        setIsSubmitting(false);
         alert("保存に失敗しました。");
       }
     } catch (error) {
       console.error(error);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -110,13 +163,15 @@ export default function CreateSchedulePage() {
           showClose={false}
         />
       </div>
+
       <div className="w-full max-w-[375px]">
         <main className="px-[16px] py-[36px] flex flex-col gap-[36px]">
+          {/* 日付選択 */}
           <FormItem label="日付" required error={error}>
             <div className="flex items-end gap-[4px]">
               <SelectBox
                 value={year}
-                onChange={(v) => setYear(v)}
+                onChange={setYear}
                 options={["2025", "2026"]}
                 suffix="年"
                 width="96px"
@@ -124,7 +179,7 @@ export default function CreateSchedulePage() {
               />
               <SelectBox
                 value={month}
-                onChange={(v) => setMonth(v)}
+                onChange={setMonth}
                 options={Array.from({ length: 12 }, (_, i) =>
                   (i + 1).toString().padStart(2, "0")
                 )}
@@ -134,7 +189,7 @@ export default function CreateSchedulePage() {
               />
               <SelectBox
                 value={day}
-                onChange={(v) => setDay(v)}
+                onChange={setDay}
                 options={daysOptions}
                 suffix="日"
                 width="80px"
@@ -152,46 +207,45 @@ export default function CreateSchedulePage() {
             />
           </FormItem>
 
+          {/* 時間選択：SelectBoxコンポーネントを使用 */}
           <FormItem label="時間">
-            <select
-              className={`w-full border border-[#9D9D9D] px-[8px] text-[20px] rounded-[4px] h-[52px] appearance-none bg-white focus:outline-none focus:border-[2px] focus:border-[#090C26] ${getTextColor(
-                time
-              )}`}
+            <SelectBox
               value={time}
-              onChange={(e) => setTime(e.target.value)}
-            >
-              <option value="">選択してください</option>
-              {[
+              onChange={setTime}
+              options={[
                 "【全日】08:30 ~ 17:30",
+                "【全日】09:00 ~ 17:30",
                 "【AM】08:30 ~ 12:00",
+                "【AM】09:00 ~ 12:00",
+                "【PM】13:00 ~ 15:00",
                 "【PM】13:00 ~ 17:30",
+                "【PM】19:00 ~ 21:00",
                 "その他",
-              ].map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
+              ]}
+              width="100%"
+              placeholder="選択してください"
+            />
           </FormItem>
 
+          {/* 場所選択：SelectBoxコンポーネントを使用 */}
           <FormItem label="場所">
             <div className="flex flex-col gap-[12px]">
-              <select
-                className={`w-full border border-[#9D9D9D] px-[8px] text-[20px] rounded-[4px] h-[52px] appearance-none bg-white focus:outline-none focus:border-[2px] focus:border-[#090C26] ${getTextColor(
-                  location
-                )}`}
+              <SelectBox
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              >
-                <option value="">選択してください</option>
-                {["佐原小", "香取中", "北佐原小", "佐原五中", "その他"].map(
-                  (opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  )
-                )}
-              </select>
+                onChange={setLocation}
+                options={[
+                  "佐原小",
+                  "香取中",
+                  "北佐原小",
+                  "佐原五中",
+                  "小見川BG",
+                  "栗源BG",
+                  "山田BG",
+                  "その他",
+                ]}
+                width="100%"
+                placeholder="選択してください"
+              />
               <CommonInput
                 disabled={location !== "その他"}
                 placeholder="その他場所を入力してください"
@@ -204,22 +258,25 @@ export default function CreateSchedulePage() {
           </FormItem>
 
           <FormItem label="対象" required>
-            <div className="grid grid-cols-3 gap-x-[8px] gap-y-[12px]">
-              {[
-                { id: "ALL", name: "ALL" },
-                { id: "boys", name: "男子" },
-                { id: "girls", name: "女子" },
-              ].map((opt) => (
-                <CustomInput
+            <div className="grid grid-cols-3 gap-x-[16px] gap-y-[12px]">
+              {targetOptions.map((opt, index) => (
+                <div
                   key={opt.id}
-                  type="radio"
-                  id={opt.id}
-                  name="target_group"
-                  value={opt.id}
-                  label={opt.name}
-                  checked={target === opt.id}
-                  onChange={() => setTarget(opt.id)}
-                />
+                  className={index === 0 ? "col-span-3 flex justify-start" : ""}
+                >
+                  <CustomInput
+                    type="radio"
+                    id={opt.id}
+                    name="target_group"
+                    value={opt.id}
+                    label={opt.name}
+                    checked={target === opt.id}
+                    onChange={() => setTarget(opt.id)}
+                    selectedColor={opt.selectedColor}
+                    selectedTextColor={opt.selectedTextColor}
+                    selectedBorderColor={opt.selectedBorderColor}
+                  />
+                </div>
               ))}
             </div>
           </FormItem>
@@ -234,7 +291,7 @@ export default function CreateSchedulePage() {
             />
           </FormItem>
 
-          <div className="flex flex-col items-center mt-[12px] gap-[24px]">
+          <div className="flex flex-col items-center mt-[12px] gap-[24px] pb-[60px]">
             <Button
               label="CHECK"
               activeBgColor="#090C26"
@@ -254,12 +311,14 @@ export default function CreateSchedulePage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         buttons={
-          <Button
-            label={isNew ? "ADD" : "EDIT"}
-            activeBgColor="#090C26"
-            onClick={handleRegister}
-            disabled={isSubmitting}
-          />
+          <div className="flex justify-center w-full">
+            <Button
+              label={isNew ? "ADD" : "EDIT"}
+              activeBgColor="#090C26"
+              onClick={handleRegister}
+              disabled={isSubmitting}
+            />
+          </div>
         }
       >
         <div className="flex flex-col">
