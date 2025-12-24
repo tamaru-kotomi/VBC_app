@@ -6,10 +6,10 @@ interface SelectBoxProps {
   value: string;
   onChange: (value: string) => void;
   options: string[];
-  suffix?: string; // 任意（?）に変更：時間や場所では suffix が不要なため
+  suffix?: string;
   width: string;
   bgColor?: string;
-  placeholder?: string; // 追加：型エラーを解消するため
+  placeholder?: string;
 }
 
 export const SelectBox = ({
@@ -19,7 +19,7 @@ export const SelectBox = ({
   suffix,
   width,
   bgColor = "white",
-  placeholder, // 追加
+  placeholder,
 }: SelectBoxProps) => {
   const selectIconStyle = {
     backgroundImage: "url('/images/icons/icon_pulldown.png')",
