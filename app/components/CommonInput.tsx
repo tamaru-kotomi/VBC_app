@@ -1,25 +1,51 @@
 "use client";
 
-import React from "react";
+import React, { ChangeEvent } from "react";
 
-interface CommonInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  isError?: boolean;
+interface CommonInputProps {
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+  type?: string; // type（text, passwordなど）を受け取れるように追加
 }
 
 export const CommonInput = ({
-  isError,
+  value,
+  onChange,
+  placeholder,
+  disabled,
   className = "",
-  ...props
+  type = "text", // デフォルトは text
 }: CommonInputProps) => {
-  const baseClass =
-    "w-full border border-[#9D9D9D] px-[8px] text-[20px] rounded-[4px] focus:outline-none focus:border-[2px] focus:border-[#090C26] transition-all h-[52px]";
-  // エラー時は背景色を #00C6FF の 20% に変更
-  const errorClass = isError ? "bg-[#00C6FF]/20" : "bg-white";
-
   return (
     <input
-      {...props}
-      className={`${baseClass} ${errorClass} ${className} disabled:bg-[#D9D9D9] disabled:text-transparent disabled:cursor-not-allowed`}
+      type={type} // 指定された type を適用
+      disabled={disabled}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className={`
+        w-full h-[52px] border border-[#9D9D9D] px-[8px] rounded-[4px] text-[20px] outline-none font-medium
+        focus:border-[2px] focus:border-[#090C26]
+        placeholder:text-[#999999] 
+        disabled:bg-[#D9D9D9] 
+        disabled:opacity-100 
+        disabled:cursor-not-allowed
+        /* 入力中か空（placeholder表示中）かで色を切り替え */
+        ${value === "" ? "text-[#999999]" : "text-[#090C26]"}
+        ${className}
+      `}
+      style={{
+        // iOS/Safariでdisabled時に文字が薄くなるのを防ぐ
+        WebkitTextFillColor: disabled
+          ? "#999999"
+          : value === ""
+          ? "#999999"
+          : "#090C26",
+        opacity: 1,
+      }}
     />
   );
 };
