@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { signIn } from "next-auth/react";
-import Button from "../components/Button";
-import { CommonInput } from "../components/CommonInput";
+import Button from "../../components/Button";
+import { CommonInput } from "../../components/CommonInput";
 
 export default function LoginPage() {
   const router = useRouter();

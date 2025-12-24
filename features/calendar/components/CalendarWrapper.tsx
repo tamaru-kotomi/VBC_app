@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Header from "./Header";
+import Header from "../../../components/Header";
 import Calendar from "./Calendar";
 
 // 共通のスケジュール型

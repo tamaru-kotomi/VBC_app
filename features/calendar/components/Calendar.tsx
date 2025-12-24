@@ -18,11 +18,11 @@ import {
   addMonths,
 } from "date-fns";
 import Image from "next/image";
-import Header from "../components/Header";
+import Header from "../../../components/Header";
 import DetailTable from "./DetailTable";
-import { TargetLabel } from "./TargetLabel";
-import { Modal } from "./Modal";
-import Button from "../components/Button";
+import { TargetLabel } from "../../../components/TargetLabel";
+import { Modal } from "../../../components/Modal";
+import Button from "../../../components/Button";
 import { Schedule } from "./CalendarWrapper";
 
 const targetStyles: Record<

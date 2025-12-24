@@ -3,15 +3,15 @@
 import React, { useState, useMemo, ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { isBefore, startOfDay } from "date-fns";
-import Header from "../../components/Header";
-import CustomInput from "../../components/CustomInput";
-import Button from "../../components/Button";
-import { FormItem } from "../../components/FormItem";
-import { CommonInput } from "../../components/CommonInput";
-import { SelectBox } from "../../components/SelectBox"; // コンポーネントを使用
-import { Modal } from "../../components/Modal";
-import { TargetLabel } from "../../components/TargetLabel";
-import DetailTable from "../../components/DetailTable";
+import Header from "../../../components/Header";
+import CustomInput from "../../../components/CustomInput";
+import Button from "../../../components/Button";
+import { FormItem } from "../../../components/FormItem";
+import { CommonInput } from "../../../components/CommonInput";
+import { SelectBox } from "../../../components/SelectBox"; // コンポーネントを使用
+import { Modal } from "../../../components/Modal";
+import { TargetLabel } from "../../../components/TargetLabel";
+import DetailTable from "../../../features/calendar/components/DetailTable";
 
 // 対象カテゴリーごとの色定義
 const targetOptions = [
