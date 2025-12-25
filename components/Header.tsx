@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import CustomInput from "./CustomInput";
 import Button from "./Button";
+import { TARGET_OPTIONS } from "@/features/calendar/constants/targetStyles";
 
 interface HeaderProps {
   title?: string;
@@ -36,64 +37,7 @@ export default function Header({
 
   const hasSelection = Object.values(checkedItems).some((val) => val === true);
 
-  const filterOptions = [
-    {
-      id: "ALL",
-      name: "ALL",
-      value: "0",
-      selectedColor: "#8BC34A",
-      selectedTextColor: "#fff",
-      selectedBorderColor: "#8BC34A",
-    },
-    {
-      id: "boys",
-      name: "男子",
-      value: "1",
-      selectedColor: "#3C2465",
-      selectedTextColor: "#fff",
-      selectedBorderColor: "#3C2465",
-    },
-    {
-      id: "boysA",
-      name: "男子A",
-      value: "2",
-      selectedColor: "#673AB7",
-      selectedTextColor: "#fff",
-      selectedBorderColor: "#673AB7",
-    },
-    {
-      id: "boysB",
-      name: "男子B",
-      value: "3",
-      selectedColor: "#ffffff",
-      selectedTextColor: "#673AB7",
-      selectedBorderColor: "#673AB7",
-    },
-    {
-      id: "girls",
-      name: "女子",
-      value: "4",
-      selectedColor: "#811C1C",
-      selectedTextColor: "#fff",
-      selectedBorderColor: "#811C1C",
-    },
-    {
-      id: "girlsA",
-      name: "女子A",
-      value: "5",
-      selectedColor: "#D32F2F",
-      selectedTextColor: "#fff",
-      selectedBorderColor: "#D32F2F",
-    },
-    {
-      id: "girlsB",
-      name: "女子B",
-      value: "6",
-      selectedColor: "#ffffff",
-      selectedTextColor: "#D32F2F",
-      selectedBorderColor: "#D32F2F",
-    },
-  ];
+  // 以前の長い filterOptions 配列は削除して、TARGET_OPTIONS をそのまま使います
 
   const handleCheckboxChange = (id: string, isChecked: boolean) => {
     setCheckedItems((prev) => ({ ...prev, [id]: isChecked }));
@@ -131,6 +75,7 @@ export default function Header({
         } w-full z-[100] leading-tight`}
       >
         <div className="relative w-full h-[120px] bg-[#090C26] overflow-hidden">
+          {/* ...ヘッダーのデザイン部分は変更なし... */}
           {title && (
             <h1 className="absolute left-[16px] bottom-[16px] text-white text-[36px] font-bold tracking-wider leading-none">
               {title}
@@ -163,6 +108,7 @@ export default function Header({
             </button>
           )}
         </div>
+
         <div
           className={`absolute top-[120px] left-0 w-full overflow-hidden transition-all duration-300 ease-in-out bg-[#090C26] z-[100] ${
             isFilterOpen ? "h-[566px]" : "h-0"
@@ -177,7 +123,8 @@ export default function Header({
               </p>
               <div className="flex justify-center w-full px-[8px] mt-[20px]">
                 <div className="grid grid-cols-[repeat(3,min-content)] w-full max-w-[375px] justify-center gap-x-[16px] gap-y-[12px]">
-                  {filterOptions.map((option, index) => (
+                  {/* ★ TARGET_OPTIONS を使用 */}
+                  {TARGET_OPTIONS.map((option, index) => (
                     <div
                       key={option.id}
                       className={
@@ -185,18 +132,24 @@ export default function Header({
                       }
                     >
                       <CustomInput
-                        {...option}
                         type="checkbox"
+                        id={option.id}
+                        name="header_filter"
+                        value={option.id}
                         label={option.name}
                         checked={checkedItems[option.id]}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           handleCheckboxChange(option.id, e.target.checked)
                         }
+                        selectedColor={option.bg}
+                        selectedTextColor={option.text}
+                        selectedBorderColor={option.border || option.bg}
                       />
                     </div>
                   ))}
                 </div>
               </div>
+              {/* ...ボタン部分は変更なし... */}
               <div className="flex flex-col items-center mt-10 space-y-[12px]">
                 <Button
                   label="FILTER"
