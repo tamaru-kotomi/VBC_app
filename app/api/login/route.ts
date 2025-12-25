@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
-import { User } from "@prisma/client"; // Prismaから直接型をインポート
+import { User } from "@prisma/client";
 
 export async function POST(request: Request) {
   try {
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       user: {
         email: user.email,
         isAdmin: user.isAdmin,
-        grades: user.grades, // Int[] が正しく反映されていればエラーになりません
+        grades: user.grades,
       },
     });
   } catch (error) {

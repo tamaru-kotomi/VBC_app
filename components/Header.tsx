@@ -37,8 +37,6 @@ export default function Header({
 
   const hasSelection = Object.values(checkedItems).some((val) => val === true);
 
-  // 以前の長い filterOptions 配列は削除して、TARGET_OPTIONS をそのまま使います
-
   const handleCheckboxChange = (id: string, isChecked: boolean) => {
     setCheckedItems((prev) => ({ ...prev, [id]: isChecked }));
   };
@@ -75,7 +73,6 @@ export default function Header({
         } w-full z-[100] leading-tight`}
       >
         <div className="relative w-full h-[120px] bg-[#090C26] overflow-hidden">
-          {/* ...ヘッダーのデザイン部分は変更なし... */}
           {title && (
             <h1 className="absolute left-[16px] bottom-[16px] text-white text-[36px] font-bold tracking-wider leading-none">
               {title}
@@ -149,7 +146,6 @@ export default function Header({
                   ))}
                 </div>
               </div>
-              {/* ...ボタン部分は変更なし... */}
               <div className="flex flex-col items-center mt-10 space-y-[12px]">
                 <Button
                   label="FILTER"

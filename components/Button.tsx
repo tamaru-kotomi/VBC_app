@@ -7,7 +7,6 @@ interface ButtonProps {
   activeBgColor?: string; // 活性時の背景色
   activeTextColor?: string; // 活性時の文字色
   className?: string; // 追加のスタイル調整用
-  // ↓ 型エラー解消のために追加
   type?: "button" | "submit" | "reset";
 }
 

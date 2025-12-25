@@ -8,7 +8,7 @@ interface CommonInputProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
-  type?: string; // type（text, passwordなど）を受け取れるように追加
+  type?: string;
 }
 
 export const CommonInput = ({

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "../../../lib/db";
-import { auth } from "@/auth"; // ★認証チェック用に追加
+import { auth } from "@/auth";
 
 export async function DELETE(
   request: Request,

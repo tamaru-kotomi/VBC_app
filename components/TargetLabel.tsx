@@ -2,7 +2,7 @@
 
 import React from "react";
 
-// 表示用データ定義（CustomInputと共通の配色）
+// 表示用データ定義
 export const TARGET_CONFIG: Record<
   string,
   { name: string; bg: string; text: string; border?: string }

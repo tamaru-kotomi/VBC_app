@@ -3,7 +3,7 @@
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
-import ScheduleForm from "@/features/calendar/components/ScheduleForm";
+import ScheduleForm from "@/features/schedules/components/ScheduleForm";
 
 function CreateScheduleContent() {
   const searchParams = useSearchParams();

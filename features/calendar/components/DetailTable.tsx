@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-// ★ 共通定数をインポート
 import { TARGET_CONFIG } from "@/features/calendar/constants/targetStyles";
 
 interface DetailItem {
