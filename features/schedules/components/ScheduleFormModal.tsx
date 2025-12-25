@@ -52,8 +52,10 @@ export default function ScheduleFormModal({
         <div className="w-full flex justify-start mb-[18px]">
           <TargetLabel targetId={data.target} />
         </div>
+
         <DetailTable
           targetId={data.target}
+          maxHeight="285px"
           items={[
             { label: "日付", value: `${data.year}/${data.month}/${data.day}` },
             { label: "タイトル", value: data.title },
