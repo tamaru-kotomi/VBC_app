@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { prisma } from "@/app/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -11,49 +13,53 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("入力されたメール:", credentials?.email);
-        console.log("入力されたパスワード:", credentials?.password);
+        if (!credentials?.email || !credentials?.password) return null;
 
-        // 1. 管理者ユーザーの判定
-        if (
-          credentials?.email === "admin@example.com" &&
-          credentials?.password === "password"
-        ) {
+        try {
+          // 1. DBからユーザーを取得
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email as string },
+          });
+
+          // 2. ユーザーが存在しない、またはパスワード未設定の場合は失敗
+          if (!user || !user.password) {
+            console.log("❌ ユーザーが見つかりません");
+            return null;
+          }
+
+          // 3. パスワードの照合（ハッシュ化された値と比較）
+          const isValid = await bcrypt.compare(
+            credentials.password as string,
+            user.password
+          );
+
+          if (!isValid) {
+            console.log("❌ パスワードが一致しません");
+            return null;
+          }
+
+          console.log("✅ 認証成功:", user.email);
+
+          // 4. 成功：セッションにデータを渡す
           return {
-            id: "1",
-            name: "Admin User",
-            email: "admin@example.com",
-            isAdmin: true, // 管理者フラグ
+            id: user.id.toString(),
+            email: user.email,
+            isAdmin: user.isAdmin === true,
           };
+        } catch (error) {
+          console.error("Auth error:", error);
+          return null;
         }
-
-        // 2. 一般ユーザーの判定（追加）
-        if (
-          credentials?.email === "test@example.com" &&
-          credentials?.password === "password123"
-        ) {
-          return {
-            id: "2",
-            name: "General User",
-            email: "test@example.com",
-            isAdmin: false, // 一般ユーザーは false
-          };
-        }
-
-        // どちらにも一致しない場合は認証失敗
-        return null;
       },
     }),
   ],
   callbacks: {
-    // JWTトークンに isAdmin を持たせる
     async jwt({ token, user }: any) {
       if (user) {
         token.isAdmin = user.isAdmin;
       }
       return token;
     },
-    // セッションオブジェクトに isAdmin を持たせる（フロントエンドで使えるようにする）
     async session({ session, token }: any) {
       if (session.user) {
         (session.user as any).isAdmin = token.isAdmin;
@@ -61,23 +67,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-  session: {
-    strategy: "jwt",
-  },
-  // クッキーが焼けない問題を解決するための強制設定
-  secret: "vbc-app-super-secret-key-1234567890",
+  session: { strategy: "jwt" },
+  secret: process.env.AUTH_SECRET,
   trustHost: true,
   basePath: "/api/auth",
-  cookies: {
-    sessionToken: {
-      name: `authjs.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: false,
-      },
-    },
-  },
-  debug: true,
+  debug: process.env.NODE_ENV === "development",
 });
