@@ -167,7 +167,7 @@ export default function Calendar({
             canGoPrev && setCurrentMonth(subMonths(currentMonth, 1))
           }
           className={`flex items-center gap-[4px] text-[20px] font-bold ${
-            !canGoPrev ? "opacity-50" : ""
+            !canGoPrev ? "text-[#999999]" : ""
           }`}
         >
           <Image
@@ -190,7 +190,7 @@ export default function Calendar({
             canGoNext && setCurrentMonth(addMonths(currentMonth, 1))
           }
           className={`flex items-center gap-[4px] text-[20px] font-bold ${
-            !canGoNext ? "opacity-50" : ""
+            !canGoNext ? "text-[#999999]" : ""
           }`}
         >
           <span>次月</span>
@@ -391,7 +391,7 @@ export default function Calendar({
                   onClick={handleAddSchedule}
                   disabled={isSelectedPast}
                   className={`fixed right-[16px] bottom-[36px] z-[120] ${
-                    isSelectedPast ? "cursor-not-allowed opacity-50" : ""
+                    isSelectedPast ? "cursor-not-allowed" : ""
                   }`}
                 >
                   <Image
