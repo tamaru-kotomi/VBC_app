@@ -6,7 +6,6 @@ import bcrypt from "bcryptjs";
 import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // 1. auth.config.ts の軽量設定（Middlewareと共有）を読み込む
   ...authConfig,
 
   providers: [
@@ -20,18 +19,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          const user = await prisma.user.findUnique({
+          // データベースからユーザーを取得
+          const dbUser = await prisma.user.findUnique({
             where: { email: credentials.email as string },
           });
 
-          if (!user || !user.password) {
+          if (!dbUser || !dbUser.password) {
             console.log("❌ ユーザーが見つかりません");
             return null;
           }
 
           const isValid = await bcrypt.compare(
             credentials.password as string,
-            user.password
+            dbUser.password
           );
 
           if (!isValid) {
@@ -39,13 +39,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return null;
           }
 
-          console.log("✅ 認証成功:", user.email);
+          console.log("✅ 認証成功:", dbUser.email);
 
-          // 成功：セッションにデータを渡す
+          // ここで返却するオブジェクトが、下の jwt コールバックの 'user' に入ります
           return {
-            id: user.id.toString(),
-            email: user.email,
-            isAdmin: user.isAdmin === true,
+            id: dbUser.id.toString(),
+            email: dbUser.email,
+            isAdmin: dbUser.isAdmin === true, // ここでisAdminを付与
           };
         } catch (error) {
           console.error("Auth error:", error);
@@ -56,26 +56,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-    // トークンに isAdmin フラグを付与
-    async jwt({ token, user }: any) {
+    // auth.config.ts の authorized 判定を上書きしないようにマージ
+    ...authConfig.callbacks,
+
+    // トークン作成時（ログイン時）に user オブジェクトから isAdmin を抽出して保持
+    async jwt({ token, user }: { token: any; user: any }) {
       if (user) {
         token.isAdmin = user.isAdmin;
       }
       return token;
     },
-    // セッションで isAdmin を参照可能にする
-    async session({ session, token }: any) {
+
+    // セッションに isAdmin を書き込む（これでページ側から参照可能になる）
+    async session({ session, token }: { session: any; token: any }) {
       if (session.user) {
-        (session.user as any).isAdmin = token.isAdmin;
+        session.user.isAdmin = !!token.isAdmin;
       }
       return session;
     },
   },
 
-  // JWTベースのセッション管理
   session: { strategy: "jwt" },
-
   secret: process.env.AUTH_SECRET,
-
   debug: process.env.NODE_ENV === "development",
 });

@@ -23,16 +23,12 @@ export default function ScheduleForm() {
   const scheduleId = searchParams.get("id");
   const queryDate = searchParams.get("date");
   const isNew = searchParams.get("isNew") === "true";
-  const defaultDate = queryDate ? new Date(queryDate) : new Date();
 
-  // ステート管理
-  const [year, setYear] = useState(defaultDate.getFullYear().toString());
-  const [month, setMonth] = useState(
-    (defaultDate.getMonth() + 1).toString().padStart(2, "0")
-  );
-  const [day, setDay] = useState(
-    defaultDate.getDate().toString().padStart(2, "0")
-  );
+  // --- ステート管理 (初期値は文字列で固定し、useEffectで同期する) ---
+  const [year, setYear] = useState("2026");
+  const [month, setMonth] = useState("01");
+  const [day, setDay] = useState("01");
+
   const [title, setTitle] = useState(searchParams.get("title") || "");
   const [time, setTime] = useState(searchParams.get("time") || "");
   const [location, setLocation] = useState(searchParams.get("location") || "");
@@ -46,6 +42,18 @@ export default function ScheduleForm() {
   const [isErrorBg, setIsErrorBg] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // クエリパラメータの日付をステートに反映
+  useEffect(() => {
+    if (queryDate) {
+      const d = new Date(queryDate);
+      if (!isNaN(d.getTime())) {
+        setYear(d.getFullYear().toString());
+        setMonth((d.getMonth() + 1).toString().padStart(2, "0"));
+        setDay(d.getDate().toString().padStart(2, "0"));
+      }
+    }
+  }, [queryDate]);
 
   // 日付の選択肢計算
   const daysOptions = useMemo(() => {
@@ -103,6 +111,7 @@ export default function ScheduleForm() {
         }),
       });
       if (response.ok) {
+        // 保存後はカレンダーへ戻る
         router.push("/calendar");
         router.refresh();
       } else {
@@ -186,7 +195,7 @@ export default function ScheduleForm() {
           />
         </FormItem>
 
-        {/* 場所（iOS対策版） */}
+        {/* 場所 */}
         <FormItem label="場所">
           <div className="flex flex-col gap-[12px]">
             <SelectBox
@@ -205,7 +214,6 @@ export default function ScheduleForm() {
               width="100%"
               placeholder="選択してください"
             />
-            {/* iOSで薄くなるのを防ぐための特殊なinput実装 */}
             <div
               style={{
                 width: "100%",
@@ -256,7 +264,7 @@ export default function ScheduleForm() {
           </div>
         </FormItem>
 
-        {/* 対象（共通定数を使用） */}
+        {/* 対象 */}
         <FormItem label="対象" required>
           <div className="grid grid-cols-3 gap-x-[8px] gap-y-[12px]">
             {TARGET_OPTIONS.map((opt, index) => (

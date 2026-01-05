@@ -1,36 +1,36 @@
-"use client";
-
-import React, { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import Header from "@/components/Header";
 import ScheduleForm from "@/features/schedules/components/ScheduleForm";
 
-function CreateScheduleContent() {
-  const searchParams = useSearchParams();
-  const isNew = searchParams.get("isNew") === "true";
+export default async function CreateSchedulePage() {
+  // サーバー側で最新のセッションを取得
+  const session = await auth();
+
+  // 1. セッションがない、または isAdmin が true でない場合は即座にカレンダーへ戻す
+  // 型定義のおかげで session.user.isAdmin がエラーなく参照できます
+  if (!session?.user?.isAdmin) {
+    redirect("/calendar");
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center">
-      {/* ヘッダー部分はページ側で管理 */}
       <div className="w-full">
-        <Header
-          title={isNew ? "スケジュール登録" : "スケジュール編集"}
-          showClose={false}
-        />
+        <Header title="スケジュール管理" showClose={false} />
       </div>
-
       <div className="w-full max-w-[375px]">
-        {/* フォーム本体を呼び出す */}
-        <ScheduleForm />
+        {/* URLパラメータを扱うコンポーネントには Suspense が必須 */}
+        <Suspense
+          fallback={
+            <div className="p-10 text-center text-[16px] font-bold">
+              読み込み中...
+            </div>
+          }
+        >
+          <ScheduleForm />
+        </Suspense>
       </div>
     </div>
-  );
-}
-
-export default function CreateSchedulePage() {
-  return (
-    <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
-      <CreateScheduleContent />
-    </Suspense>
   );
 }

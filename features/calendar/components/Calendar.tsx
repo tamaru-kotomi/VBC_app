@@ -39,7 +39,7 @@ export default function Calendar({
 }: CalendarProps) {
   const router = useRouter();
 
-  // --- 修正ポイント：Hydration Error 防止用の State ---
+  // --- Hydration 対策 ---
   const [isMounted, setIsMounted] = useState(false);
 
   // --- State ---
@@ -52,50 +52,51 @@ export default function Calendar({
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // マウント時に実行
   useEffect(() => {
     setIsMounted(true);
     setSchedules(initialSchedules);
   }, [initialSchedules]);
 
-  // マウントされるまでは何も描画しない（サーバーとクライアントの差異をなくす）
-  if (!isMounted) {
-    return <div className="min-h-screen bg-white" />;
-  }
-
-  // クライアント側で確定した今日の日付
+  // --- カレンダー計算 ---
   const today = startOfDay(new Date());
-
-  // --- カレンダー計算ロジック ---
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarDays = eachDayOfInterval({
-    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
-    end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
-  });
+  const calendarDays = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+        end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
+      }),
+    [monthStart, monthEnd]
+  );
 
   const canGoPrev = isAfter(monthStart, startOfMonth(subMonths(new Date(), 1)));
   const canGoNext = isBefore(
     monthStart,
     startOfMonth(addMonths(new Date(), 1))
   );
-  const isSelectedPast = selectedDay
-    ? isBefore(startOfDay(selectedDay), today)
-    : false;
 
   const getFilteredSchedules = (list: Schedule[]) => {
     return list.filter((s) => activeFilters.includes(s.targetId));
   };
 
-  // --- ハンドラー ---
+  // --- ハンドラー (window.location.assign に修正) ---
   const handleAddSchedule = () => {
-    if (selectedDay && !isSelectedPast) {
-      const dateStr = format(selectedDay, "yyyy-MM-dd");
-      router.push(`/calendar/create?date=${dateStr}&isNew=true`);
-    }
+    if (!selectedDay) return;
+    const isPast = isBefore(startOfDay(selectedDay), today);
+    if (isPast) return;
+
+    const dateStr = format(selectedDay, "yyyy-MM-dd");
+    const url = `/calendar/create?date=${dateStr}&isNew=true`;
+
+    // 強制リロード遷移でNextAuthのセッション判定を確実にする
+    window.location.assign(url);
   };
 
   const handleEdit = (schedule: Schedule) => {
+    const isPast = isBefore(startOfDay(new Date(schedule.date)), today);
+    if (isPast) return;
+
     const dateObj = new Date(schedule.date);
     const params = new URLSearchParams({
       id: schedule.id,
@@ -108,7 +109,9 @@ export default function Calendar({
       content: schedule.content || "",
       isNew: "false",
     });
-    router.push(`/calendar/create?${params.toString()}`);
+    const url = `/calendar/create?${params.toString()}`;
+
+    window.location.assign(url);
   };
 
   const confirmDelete = (schedule: Schedule) => {
@@ -144,24 +147,11 @@ export default function Calendar({
     return "#090C26";
   };
 
-  const WeekDaysHeader = (
-    <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
-      {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
-        <div
-          key={day}
-          style={{
-            color:
-              day === "SUN" ? "#C20000" : day === "SAT" ? "#5343CD" : "#090C26",
-          }}
-        >
-          {day}
-        </div>
-      ))}
-    </div>
-  );
+  if (!isMounted) return null;
 
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
+      {/* 月移動ナビゲーション */}
       <div className="flex items-center justify-between mb-6 w-full px-[8px]">
         <button
           onClick={() =>
@@ -208,7 +198,23 @@ export default function Calendar({
         </button>
       </div>
 
-      {WeekDaysHeader}
+      <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
+        {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
+          <div
+            key={day}
+            style={{
+              color:
+                day === "SUN"
+                  ? "#C20000"
+                  : day === "SAT"
+                  ? "#5343CD"
+                  : "#090C26",
+            }}
+          >
+            {day}
+          </div>
+        ))}
+      </div>
 
       <div className="border-[2px] border-[#9D9D9D] bg-[#9D9D9D] grid grid-cols-7 gap-[1px] overflow-hidden rounded-[2px]">
         {calendarDays.map((day) => {
@@ -217,7 +223,6 @@ export default function Calendar({
           );
           const daySchedules = getFilteredSchedules(rawDaySchedules);
           const isCurrentMonth = isSameMonth(day, monthStart);
-
           return (
             <div
               key={day.toString()}
@@ -263,6 +268,7 @@ export default function Calendar({
         })}
       </div>
 
+      {/* 詳細モーダル */}
       <div
         className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ${
           selectedDay ? "translate-y-0" : "translate-y-full"
@@ -292,7 +298,7 @@ export default function Calendar({
                       isSameDay(new Date(s.date), selectedDay)
                     )
                   );
-                  if (daySchedules.length === 0) {
+                  if (daySchedules.length === 0)
                     return (
                       <div className="w-full text-center">
                         <p className="text-[16px] font-bold text-[#090C26]">
@@ -300,7 +306,6 @@ export default function Calendar({
                         </p>
                       </div>
                     );
-                  }
                   return daySchedules.map((schedule) => {
                     const isPast = isBefore(
                       startOfDay(new Date(schedule.date)),
@@ -315,10 +320,12 @@ export default function Calendar({
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  !isPast && handleEdit(schedule);
+                                  handleEdit(schedule);
                                 }}
-                                disabled={isPast}
                                 className="flex flex-col items-center gap-[2px]"
+                                style={{
+                                  cursor: isPast ? "default" : "pointer",
+                                }}
                               >
                                 <Image
                                   src={
@@ -386,14 +393,11 @@ export default function Calendar({
               {isAdmin && (
                 <button
                   onClick={handleAddSchedule}
-                  disabled={isSelectedPast}
-                  className={`fixed right-[16px] bottom-[36px] z-[120] ${
-                    isSelectedPast ? "cursor-not-allowed" : ""
-                  }`}
+                  className="fixed right-[16px] bottom-[36px] z-[120] cursor-pointer"
                 >
                   <Image
                     src={
-                      isSelectedPast
+                      selectedDay && isBefore(startOfDay(selectedDay), today)
                         ? "/images/icons/icon_plus_gray.png"
                         : "/images/icons/icon_plus.png"
                     }
@@ -408,6 +412,7 @@ export default function Calendar({
         </main>
       </div>
 
+      {/* 削除確認モーダル */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
