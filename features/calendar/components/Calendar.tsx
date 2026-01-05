@@ -85,6 +85,7 @@ export default function Calendar({
   const handleAddSchedule = () => {
     if (selectedDay && !isSelectedPast) {
       const dateStr = format(selectedDay, "yyyy-MM-dd");
+      // 絶対URL（http://...）を含まないようにパスのみを指定
       router.push(`/calendar/create?date=${dateStr}&isNew=true`);
     }
   };
@@ -104,7 +105,6 @@ export default function Calendar({
     });
     router.push(`/calendar/create?${params.toString()}`);
   };
-
   const confirmDelete = (schedule: Schedule) => {
     setDeletingSchedule(schedule);
     setIsDeleteModalOpen(true);

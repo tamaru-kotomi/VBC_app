@@ -1,16 +1,15 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 
-// 1. NextAuth から auth 関数を取得
+// 1. NextAuth の設定から auth 関数を取得
 const { auth } = NextAuth(authConfig);
 
-// 2. Next.js が認識できるように "middleware" という名前の関数として export する
+// 2. Next.js が要求する「関数」の形でデフォルトエクスポートする
 export default auth((req) => {
-  // ここに独自のロジックを書くこともできますが、
-  // authConfig.callbacks.authorized で判定しているので、基本はこのままでOKです。
+  // 認証後の追加ロジックが必要な場合はここに書く
 });
 
 export const config = {
-  // 画像や静的ファイルを対象外にする
+  // 静的ファイルやAPIなどを除外する設定
   matcher: ["/((?!api|_next/static|_next/image|images|favicon.ico).*)"],
 };
