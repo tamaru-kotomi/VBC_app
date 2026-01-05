@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "../../lib/db"; // 相対パスで確実に指定
+import { db } from "../../lib/db";
 
 export async function POST(request: Request) {
   try {

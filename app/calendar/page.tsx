@@ -11,8 +11,8 @@ export default async function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-white relative">
-      {/* isAdmin フラグを CalendarWrapper に渡します。
-        session?.user?.isAdmin が存在すれば true、なければ false となります。
+      {/* isAdmin フラグを CalendarWrapper に渡す。
+        session?.user?.isAdmin が存在すれば true、なければ false とる。
       */}
       <CalendarWrapper
         initialSchedules={schedules}

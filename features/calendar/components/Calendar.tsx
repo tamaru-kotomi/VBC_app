@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   format,
@@ -24,38 +24,27 @@ import { TargetLabel } from "../../../components/TargetLabel";
 import { Modal } from "../../../components/Modal";
 import Button from "../../../components/Button";
 import { Schedule } from "./CalendarWrapper";
-
-const targetStyles: Record<
-  string,
-  { bg: string; text: string; border: string; name: string }
-> = {
-  ALL: { bg: "#8BC34A", text: "#FFFFFF", border: "#8BC34A", name: "ALL" },
-  boys: { bg: "#3C2465", text: "#FFFFFF", border: "#3C2465", name: "男子" },
-  boysA: { bg: "#673AB7", text: "#FFFFFF", border: "#673AB7", name: "男子A" },
-  boysB: { bg: "#FFFFFF", text: "#673AB7", border: "#673AB7", name: "男子B" },
-  girls: { bg: "#811C1C", text: "#FFFFFF", border: "#811C1C", name: "女子" },
-  girlsA: { bg: "#D32F2F", text: "#FFFFFF", border: "#D32F2F", name: "女子A" },
-  girlsB: { bg: "#FFFFFF", text: "#D32F2F", border: "#D32F2F", name: "女子B" },
-};
+// ★ 別ファイルで定義した定数をインポート
+import { TARGET_CONFIG } from "../constants/targetStyles";
 
 interface CalendarProps {
   initialSchedules: Schedule[];
   activeFilters: string[];
-  isAdmin: boolean; // ★ 追加
+  isAdmin: boolean;
 }
 
 export default function Calendar({
   initialSchedules,
   activeFilters,
-  isAdmin, // ★ 追加
+  isAdmin,
 }: CalendarProps) {
   const router = useRouter();
   const today = startOfDay(new Date());
 
+  // --- State ---
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingSchedule, setDeletingSchedule] = useState<Schedule | null>(
     null
@@ -66,12 +55,17 @@ export default function Calendar({
     setSchedules(initialSchedules);
   }, [initialSchedules]);
 
+  // --- カレンダー計算ロジック ---
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarDays = eachDayOfInterval({
-    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
-    end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
-  });
+  const calendarDays = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+        end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
+      }),
+    [monthStart, monthEnd]
+  );
 
   const canGoPrev = isAfter(monthStart, startOfMonth(subMonths(new Date(), 1)));
   const canGoNext = isBefore(
@@ -82,10 +76,12 @@ export default function Calendar({
     ? isBefore(startOfDay(selectedDay), today)
     : false;
 
+  // フィルタリング処理
   const getFilteredSchedules = (list: Schedule[]) => {
     return list.filter((s) => activeFilters.includes(s.targetId));
   };
 
+  // --- ハンドラー ---
   const handleAddSchedule = () => {
     if (selectedDay && !isSelectedPast) {
       const dateStr = format(selectedDay, "yyyy-MM-dd");
@@ -135,6 +131,7 @@ export default function Calendar({
     }
   };
 
+  // --- ヘルパー関数 ---
   const getDayColor = (date: Date) => {
     const dayEn = format(date, "EEE").toUpperCase();
     if (dayEn === "SUN") return "#C20000";
@@ -142,16 +139,35 @@ export default function Calendar({
     return "#090C26";
   };
 
+  // --- UI Parts ---
+
+  // 曜日ヘッダー
+  const WeekDaysHeader = (
+    <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
+      {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
+        <div
+          key={day}
+          style={{
+            color:
+              day === "SUN" ? "#C20000" : day === "SAT" ? "#5343CD" : "#090C26",
+          }}
+        >
+          {day}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
-      {/* 年月ナビ */}
+      {/* 年月ナビゲーション */}
       <div className="flex items-center justify-between mb-6 w-full px-[8px]">
         <button
           onClick={() =>
             canGoPrev && setCurrentMonth(subMonths(currentMonth, 1))
           }
           className={`flex items-center gap-[4px] text-[20px] font-bold ${
-            !canGoPrev ? "opacity-50" : ""
+            !canGoPrev ? "text-[#999999]" : ""
           }`}
         >
           <Image
@@ -174,7 +190,7 @@ export default function Calendar({
             canGoNext && setCurrentMonth(addMonths(currentMonth, 1))
           }
           className={`flex items-center gap-[4px] text-[20px] font-bold ${
-            !canGoNext ? "opacity-50" : ""
+            !canGoNext ? "text-[#999999]" : ""
           }`}
         >
           <span>次月</span>
@@ -191,26 +207,9 @@ export default function Calendar({
         </button>
       </div>
 
-      {/* 曜日表示 */}
-      <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
-        {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
-          <div
-            key={day}
-            style={{
-              color:
-                day === "SUN"
-                  ? "#C20000"
-                  : day === "SAT"
-                  ? "#5343CD"
-                  : "#090C26",
-            }}
-          >
-            {day}
-          </div>
-        ))}
-      </div>
+      {WeekDaysHeader}
 
-      {/* カレンダー本体 */}
+      {/* カレンダーグリッド */}
       <div className="border-[2px] border-[#9D9D9D] bg-[#9D9D9D] grid grid-cols-7 gap-[1px] overflow-hidden rounded-[2px]">
         {calendarDays.map((day) => {
           const rawDaySchedules = schedules.filter((s) =>
@@ -234,7 +233,8 @@ export default function Calendar({
               </span>
               <div className="mt-[24px] flex flex-col items-center">
                 {daySchedules.map((item) => {
-                  const style = targetStyles[item.targetId] || targetStyles.ALL;
+                  const style =
+                    TARGET_CONFIG[item.targetId] || TARGET_CONFIG.ALL;
                   return (
                     <div
                       key={item.id}
@@ -245,7 +245,7 @@ export default function Calendar({
                         borderRadius: "20px",
                         backgroundColor: style.bg,
                         color: style.text,
-                        borderColor: style.border,
+                        borderColor: style.border || style.bg,
                         borderWidth: "1px",
                         padding: "2px 0",
                         marginTop: "4px",
@@ -288,13 +288,13 @@ export default function Calendar({
 
               <div className="w-full space-y-10 pb-[120px]">
                 {(() => {
-                  const rawDaySchedules = schedules.filter((s) =>
-                    isSameDay(new Date(s.date), selectedDay)
+                  const daySchedules = getFilteredSchedules(
+                    schedules.filter((s) =>
+                      isSameDay(new Date(s.date), selectedDay)
+                    )
                   );
-                  const filteredSchedules =
-                    getFilteredSchedules(rawDaySchedules);
 
-                  if (filteredSchedules.length === 0) {
+                  if (daySchedules.length === 0) {
                     return (
                       <div className="w-full text-center">
                         <p className="text-[16px] font-bold text-[#090C26]">
@@ -304,7 +304,7 @@ export default function Calendar({
                     );
                   }
 
-                  return filteredSchedules.map((schedule) => {
+                  return daySchedules.map((schedule) => {
                     const isPast = isBefore(
                       startOfDay(new Date(schedule.date)),
                       today
@@ -313,11 +313,13 @@ export default function Calendar({
                       <div key={schedule.id} className="w-full">
                         <div className="flex justify-between items-center mb-[8px]">
                           <TargetLabel targetId={schedule.targetId} />
-                          {/* ★ 管理者のみ編集・削除ボタンを表示 */}
                           {isAdmin && (
                             <div className="flex gap-[16px]">
                               <button
-                                onClick={() => !isPast && handleEdit(schedule)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  !isPast && handleEdit(schedule);
+                                }}
                                 disabled={isPast}
                                 className="flex flex-col items-center gap-[2px]"
                               >
@@ -341,7 +343,10 @@ export default function Calendar({
                                 </span>
                               </button>
                               <button
-                                onClick={() => confirmDelete(schedule)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  confirmDelete(schedule);
+                                }}
                                 className="flex flex-col items-center gap-[2px]"
                               >
                                 <Image
@@ -381,13 +386,12 @@ export default function Calendar({
                 })()}
               </div>
 
-              {/* ★ 管理者のみプラス追従アイコンを表示 */}
               {isAdmin && (
                 <button
-                  onClick={() => !isSelectedPast && handleAddSchedule()}
+                  onClick={handleAddSchedule}
                   disabled={isSelectedPast}
                   className={`fixed right-[16px] bottom-[36px] z-[120] ${
-                    isSelectedPast ? "cursor-not-allowed opacity-50" : ""
+                    isSelectedPast ? "cursor-not-allowed" : ""
                   }`}
                 >
                   <Image
@@ -432,7 +436,7 @@ export default function Calendar({
             <>
               <p className="text-[16px] font-bold text-[#090C26] leading-tight">
                 {format(new Date(deletingSchedule.date), "yyyy/MM/dd")}{" "}
-                {targetStyles[deletingSchedule.targetId]?.name || ""}
+                {TARGET_CONFIG[deletingSchedule.targetId]?.name || ""}
               </p>
               <p className="text-[16px] font-bold text-[#090C26] leading-tight">
                 「{deletingSchedule.title}」

@@ -18,10 +18,10 @@ export interface Schedule {
 
 export default function CalendarWrapper({
   initialSchedules,
-  isAdmin, // ★ 親（page.tsx）から受け取った isAdmin を追加
+  isAdmin,
 }: {
   initialSchedules: Schedule[];
-  isAdmin: boolean; // ★ 型定義にも追加
+  isAdmin: boolean;
 }) {
   // 初期値：すべてのラベルを表示対象にする
   const [activeFilters, setActiveFilters] = useState<string[]>([
