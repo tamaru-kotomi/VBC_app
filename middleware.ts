@@ -15,3 +15,5 @@ export const config = {
   // 静的ファイルやAPIなどを除外する設定
   matcher: ["/((?!api|_next/static|_next/image|images|favicon.ico).*)"],
 };
+
+// 琴美さんのテックブログ用にPLを作成したい。
