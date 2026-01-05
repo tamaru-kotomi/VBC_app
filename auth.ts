@@ -3,11 +3,12 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/app/lib/prisma";
 import bcrypt from "bcryptjs";
-// ★ さきほど作成した軽量設定をインポート
 import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  ...authConfig, // 軽量な認可チェック(isAdminの判定など)を展開
+  // 1. auth.config.ts の軽量設定（Middlewareと共有）を読み込む
+  ...authConfig,
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -53,15 +54,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+
   callbacks: {
-    // authConfig 内の authorized コールバックと競合しないよう、
-    // ここにはトークンとセッションの加工処理だけを書きます。
+    // トークンに isAdmin フラグを付与
     async jwt({ token, user }: any) {
       if (user) {
         token.isAdmin = user.isAdmin;
       }
       return token;
     },
+    // セッションで isAdmin を参照可能にする
     async session({ session, token }: any) {
       if (session.user) {
         (session.user as any).isAdmin = token.isAdmin;
@@ -69,8 +71,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
+
+  // JWTベースのセッション管理
   session: { strategy: "jwt" },
+
   secret: process.env.AUTH_SECRET,
-  basePath: "/api/auth",
+
   debug: process.env.NODE_ENV === "development",
 });
