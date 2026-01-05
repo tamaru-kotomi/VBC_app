@@ -24,7 +24,6 @@ import { TargetLabel } from "../../../components/TargetLabel";
 import { Modal } from "../../../components/Modal";
 import Button from "../../../components/Button";
 import { Schedule } from "./CalendarWrapper";
-// ★ 別ファイルで定義した定数をインポート
 import { TARGET_CONFIG } from "../constants/targetStyles";
 
 interface CalendarProps {
@@ -39,7 +38,9 @@ export default function Calendar({
   isAdmin,
 }: CalendarProps) {
   const router = useRouter();
-  const today = startOfDay(new Date());
+
+  // --- 修正ポイント：Hydration Error 防止用の State ---
+  const [isMounted, setIsMounted] = useState(false);
 
   // --- State ---
   const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
@@ -51,21 +52,27 @@ export default function Calendar({
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // マウント時に実行
   useEffect(() => {
+    setIsMounted(true);
     setSchedules(initialSchedules);
   }, [initialSchedules]);
+
+  // マウントされるまでは何も描画しない（サーバーとクライアントの差異をなくす）
+  if (!isMounted) {
+    return <div className="min-h-screen bg-white" />;
+  }
+
+  // クライアント側で確定した今日の日付
+  const today = startOfDay(new Date());
 
   // --- カレンダー計算ロジック ---
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarDays = useMemo(
-    () =>
-      eachDayOfInterval({
-        start: startOfWeek(monthStart, { weekStartsOn: 1 }),
-        end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
-      }),
-    [monthStart, monthEnd]
-  );
+  const calendarDays = eachDayOfInterval({
+    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+    end: endOfWeek(monthEnd, { weekStartsOn: 1 }),
+  });
 
   const canGoPrev = isAfter(monthStart, startOfMonth(subMonths(new Date(), 1)));
   const canGoNext = isBefore(
@@ -76,7 +83,6 @@ export default function Calendar({
     ? isBefore(startOfDay(selectedDay), today)
     : false;
 
-  // フィルタリング処理
   const getFilteredSchedules = (list: Schedule[]) => {
     return list.filter((s) => activeFilters.includes(s.targetId));
   };
@@ -85,7 +91,6 @@ export default function Calendar({
   const handleAddSchedule = () => {
     if (selectedDay && !isSelectedPast) {
       const dateStr = format(selectedDay, "yyyy-MM-dd");
-      // 絶対URL（http://...）を含まないようにパスのみを指定
       router.push(`/calendar/create?date=${dateStr}&isNew=true`);
     }
   };
@@ -105,6 +110,7 @@ export default function Calendar({
     });
     router.push(`/calendar/create?${params.toString()}`);
   };
+
   const confirmDelete = (schedule: Schedule) => {
     setDeletingSchedule(schedule);
     setIsDeleteModalOpen(true);
@@ -131,7 +137,6 @@ export default function Calendar({
     }
   };
 
-  // --- ヘルパー関数 ---
   const getDayColor = (date: Date) => {
     const dayEn = format(date, "EEE").toUpperCase();
     if (dayEn === "SUN") return "#C20000";
@@ -139,9 +144,6 @@ export default function Calendar({
     return "#090C26";
   };
 
-  // --- UI Parts ---
-
-  // 曜日ヘッダー
   const WeekDaysHeader = (
     <div className="grid grid-cols-7 mb-[4px] text-center text-[16px] font-bold">
       {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
@@ -160,7 +162,6 @@ export default function Calendar({
 
   return (
     <div className="w-full max-w-[375px] mx-auto text-[#090C26]">
-      {/* 年月ナビゲーション */}
       <div className="flex items-center justify-between mb-6 w-full px-[8px]">
         <button
           onClick={() =>
@@ -209,7 +210,6 @@ export default function Calendar({
 
       {WeekDaysHeader}
 
-      {/* カレンダーグリッド */}
       <div className="border-[2px] border-[#9D9D9D] bg-[#9D9D9D] grid grid-cols-7 gap-[1px] overflow-hidden rounded-[2px]">
         {calendarDays.map((day) => {
           const rawDaySchedules = schedules.filter((s) =>
@@ -263,7 +263,6 @@ export default function Calendar({
         })}
       </div>
 
-      {/* 詳細スライドインモーダル */}
       <div
         className={`fixed inset-0 z-[110] bg-white transition-transform duration-500 ${
           selectedDay ? "translate-y-0" : "translate-y-full"
@@ -293,7 +292,6 @@ export default function Calendar({
                       isSameDay(new Date(s.date), selectedDay)
                     )
                   );
-
                   if (daySchedules.length === 0) {
                     return (
                       <div className="w-full text-center">
@@ -303,7 +301,6 @@ export default function Calendar({
                       </div>
                     );
                   }
-
                   return daySchedules.map((schedule) => {
                     const isPast = isBefore(
                       startOfDay(new Date(schedule.date)),
@@ -411,7 +408,6 @@ export default function Calendar({
         </main>
       </div>
 
-      {/* 削除確認モーダル */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
