@@ -1,41 +1,16 @@
-import { auth } from "@/auth";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-export default async function middleware(req: NextRequest) {
-  const session = await auth();
-  const isLoggedIn = !!session;
-  // session.user.isAdmin が true かどうかを確認
-  const isAdmin = session?.user?.isAdmin === true;
+// 1. NextAuth から auth 関数を取得
+const { auth } = NextAuth(authConfig);
 
-  const { nextUrl } = req;
+// 2. Next.js が認識できるように "middleware" という名前の関数として export する
+export default auth((req) => {
+  // ここに独自のロジックを書くこともできますが、
+  // authConfig.callbacks.authorized で判定しているので、基本はこのままでOKです。
+});
 
-  // 1. 全ユーザー（一般・管理者）がログイン必須のページ
-  const isProtectedPage = nextUrl.pathname.startsWith("/calendar");
-
-  // 2. 管理者だけがアクセスできるページ (ここを修正)
-  const isAdminOnlyPage = nextUrl.pathname.startsWith("/calendar/create");
-
-  // --- 判定ロジック ---
-
-  // A. 未ログイン 且つ 保護ページへのアクセス -> ログイン画面へ
-  if (!isLoggedIn && isProtectedPage) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
-  }
-
-  // B. ログイン済み 且つ 管理者専用ページへのアクセス 且つ 管理者ではない場合
-  if (isLoggedIn && isAdminOnlyPage && !isAdmin) {
-    // 一般ユーザーをカレンダーTOP（閲覧専用）に強制移動させる
-    console.log(
-      "🚫 一般ユーザーによる管理者ページへのアクセスをブロックしました"
-    );
-    return NextResponse.redirect(new URL("/calendar", nextUrl));
-  }
-
-  return NextResponse.next();
-}
-
-// APIや静的ファイルをミドルウェアの対象外にする
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // 画像や静的ファイルを対象外にする
+  matcher: ["/((?!api|_next/static|_next/image|images|favicon.ico).*)"],
 };
