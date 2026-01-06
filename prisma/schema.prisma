@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,31 +10,32 @@ datasource db {
 // 予定の対象者を定義する
 enum Target {
   ALL
-  JUNIOR
-  LADIES
+  BOYS
+  BOYS_A
+  BOYS_B
+  GIRLS
+  GIRLS_A
+  GIRLS_B
 }
 
-// 練習予定（スケジュール）のモデル
 model Schedule {
   id            String   @id @default(cuid())
-  date          DateTime // 日付
-  title         String   // 予定タイトル
-  time          String?  // 時間
-  location      String?  // 場所
-  otherLocation String?  // その他場所
+  date          DateTime 
+  title         String   
+  time          String?  
+  location      String?  
+  otherLocation String?  
   targetId      String   @default("ALL") 
-  content       String?  // 内容・連絡事項
+  content       String?  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
-// ユーザー・管理者のモデル（将来のログイン機能用）
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
-  // Prismaでは数値型は Int を使用します
-  grades    Int[]    // 子供の学年（例: [1, 4]）
+  grades    Int[]    
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 }
