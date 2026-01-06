@@ -9,7 +9,6 @@ export default async function CreateSchedulePage() {
   const session = await auth();
 
   // 1. セッションがない、または isAdmin が true でない場合は即座にカレンダーへ戻す
-  // 型定義のおかげで session.user.isAdmin がエラーなく参照できます
   if (!session?.user?.isAdmin) {
     redirect("/calendar");
   }

@@ -41,7 +41,7 @@ export default function CalendarWrapper({
         onFilterApply={(selectedIds) => setActiveFilters(selectedIds)}
       />
       <main className="py-[36px] px-[8px]">
-        {/* ★ Calendar コンポーネントに isAdmin を渡します */}
+        {/* ★ Calendar コンポーネントに isAdmin を渡す */}
         <Calendar
           initialSchedules={initialSchedules}
           activeFilters={activeFilters}
