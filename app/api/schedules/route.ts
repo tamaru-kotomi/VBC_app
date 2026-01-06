@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "../../lib/db";
+import { prisma } from "@/app/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -36,14 +36,14 @@ export async function POST(request: Request) {
 
     if (id) {
       // IDがある場合は「修正（反映）」
-      await db.schedule.update({
+      await prisma.schedule.update({
         where: { id: id },
         data: payload,
       });
       return NextResponse.json({ success: true, message: "Updated" });
     } else {
       // IDがない場合は「新規登録」
-      await db.schedule.create({
+      await prisma.schedule.create({
         data: payload,
       });
       return NextResponse.json({ success: true, message: "Created" });
