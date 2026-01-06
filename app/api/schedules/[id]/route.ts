@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../lib/db";
+import { prisma } from "@/app/lib/prisma";
 import { auth } from "@/auth";
 
 export async function DELETE(
@@ -29,7 +29,7 @@ export async function DELETE(
     }
 
     // 3. DBから削除
-    await db.schedule.delete({
+    await prisma.schedule.delete({
       where: { id: id },
     });
 
