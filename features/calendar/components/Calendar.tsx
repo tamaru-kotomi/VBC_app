@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import {
   format,
   isSameDay,
@@ -37,8 +36,6 @@ export default function Calendar({
   activeFilters,
   isAdmin,
 }: CalendarProps) {
-  const router = useRouter();
-
   // --- Hydration 対策 ---
   const [isMounted, setIsMounted] = useState(false);
 
