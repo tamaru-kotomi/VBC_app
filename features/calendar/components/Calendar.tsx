@@ -17,13 +17,13 @@ import {
   addMonths,
 } from "date-fns";
 import Image from "next/image";
-import Header from "../../../components/Header";
-import DetailTable from "./DetailTable";
-import { TargetLabel } from "../../../components/TargetLabel";
-import { Modal } from "../../../components/Modal";
-import Button from "../../../components/Button";
-import { Schedule } from "./CalendarWrapper";
-import { TARGET_CONFIG } from "../constants/targetStyles";
+import Header from "@/components/Header";
+import DetailTable from "@/features/calendar/components/DetailTable";
+import { TargetLabel } from "@/components/TargetLabel";
+import { Modal } from "@/components/Modal";
+import Button from "@/components/Button";
+import { Schedule } from "@/features/calendar/components/CalendarWrapper";
+import { TARGET_CONFIG } from "@/features/calendar/constants/targetStyles";
 
 interface CalendarProps {
   initialSchedules: Schedule[];
@@ -77,7 +77,6 @@ export default function Calendar({
     return list.filter((s) => activeFilters.includes(s.targetId));
   };
 
-  // --- ハンドラー (window.location.assign に修正) ---
   const handleAddSchedule = () => {
     if (!selectedDay) return;
     const isPast = isBefore(startOfDay(selectedDay), today);

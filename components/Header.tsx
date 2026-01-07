@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import CustomInput from "./CustomInput";
-import Button from "./Button";
+import CustomInput from "@/components/CustomInput";
+import Button from "@/components/Button";
 import { TARGET_OPTIONS } from "@/features/calendar/constants/targetStyles";
 
 interface HeaderProps {
