@@ -4,6 +4,7 @@ import { Modal } from "@/components/Modal";
 import Button from "@/components/Button";
 import { TargetLabel } from "@/components/TargetLabel";
 import DetailTable from "@/features/calendar/components/DetailTable";
+import { ScheduleFormData } from "@/types/schedule";
 
 interface ScheduleFormModalProps {
   isOpen: boolean;
@@ -11,17 +12,7 @@ interface ScheduleFormModalProps {
   onConfirm: () => void;
   isSubmitting: boolean;
   isNew: boolean;
-  data: {
-    year: string;
-    month: string;
-    day: string;
-    title: string;
-    time: string;
-    location: string;
-    otherLocation: string;
-    target: string;
-    content: string;
-  };
+  data: ScheduleFormData;
 }
 
 export default function ScheduleFormModal({
@@ -49,11 +40,11 @@ export default function ScheduleFormModal({
     >
       <div className="flex flex-col">
         <div className="w-full flex justify-start mb-[18px]">
-          <TargetLabel targetId={data.target} />
+          <TargetLabel targetId={data.targetId} />
         </div>
 
         <DetailTable
-          targetId={data.target}
+          targetId={data.targetId}
           maxHeight="285px"
           items={[
             { label: "日付", value: `${data.year}/${data.month}/${data.day}` },
@@ -63,7 +54,7 @@ export default function ScheduleFormModal({
               label: "場所",
               value:
                 data.location === "その他"
-                  ? data.otherLocation
+                  ? data.otherLocation || ""
                   : data.location || "指定なし",
             },
             { label: "内容・連絡事項", value: data.content || "-" },
