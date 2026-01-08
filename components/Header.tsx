@@ -120,7 +120,6 @@ export default function Header({
               </p>
               <div className="flex justify-center w-full px-[8px] mt-[20px]">
                 <div className="grid grid-cols-[repeat(3,min-content)] w-full max-w-[375px] justify-center gap-x-[16px] gap-y-[12px]">
-                  {/* ★ TARGET_OPTIONS を使用 */}
                   {TARGET_OPTIONS.map((option, index) => (
                     <div
                       key={option.id}
