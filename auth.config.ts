@@ -1,4 +1,3 @@
-// vbc-app/auth.config.ts
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
@@ -12,7 +11,7 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isCalendarPage = nextUrl.pathname.startsWith("/calendar");
 
-      // 未ログインならログイン画面へ（これだけに絞る）
+      // 未ログインならログイン画面へ
       if (!isLoggedIn && isCalendarPage) {
         return false;
       }
