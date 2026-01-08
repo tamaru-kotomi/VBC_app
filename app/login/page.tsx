@@ -10,7 +10,7 @@ export default function LoginPage() {
           <div className="relative w-[200px] h-[200px]">
             <Image
               src="/images/icons/logo.png"
-              alt="Logo"
+              alt="ロゴ"
               fill
               style={{ objectFit: "contain" }}
               priority

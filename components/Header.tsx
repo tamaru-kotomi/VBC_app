@@ -85,7 +85,7 @@ export default function Header({
             >
               <Image
                 src="/images/icons/icon_close_white.png"
-                alt="Close"
+                alt="閉じる"
                 width={44}
                 height={44}
               />
@@ -98,7 +98,7 @@ export default function Header({
             >
               <Image
                 src="/images/icons/icon_gear.png"
-                alt="Toggle Filter"
+                alt="表示フィルター設定"
                 width={44}
                 height={44}
               />

@@ -163,7 +163,7 @@ export default function Calendar({
                 ? "/images/icons/icon_prev.png"
                 : "/images/icons/icon_prev_gray.png"
             }
-            alt="前"
+            alt="前月"
             width={18}
             height={18}
           />
@@ -187,7 +187,7 @@ export default function Calendar({
                 ? "/images/icons/icon_next.png"
                 : "/images/icons/icon_next_gray.png"
             }
-            alt="次"
+            alt="次月"
             width={18}
             height={18}
           />
