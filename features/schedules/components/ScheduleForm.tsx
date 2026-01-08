@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { isBefore, startOfDay } from "date-fns";
 
@@ -268,27 +268,28 @@ export default function ScheduleForm() {
         <FormItem label="対象" required>
           <div className="grid grid-cols-3 gap-x-[8px] gap-y-[12px]">
             {TARGET_OPTIONS.map((opt, index) => (
-              <div
-                key={opt.id}
-                className={
-                  index === 0
-                    ? "col-span-3 flex justify-start"
-                    : "flex justify-center"
-                }
-              >
-                <CustomInput
-                  type="radio"
-                  id={opt.id}
-                  name="schedule-target"
-                  value={opt.id}
-                  label={opt.name}
-                  checked={target === opt.id}
-                  onChange={() => setTarget(opt.id)}
-                  selectedColor={opt.bg}
-                  selectedTextColor={opt.text}
-                  selectedBorderColor={opt.border || opt.bg}
-                />
-              </div>
+              <React.Fragment key={opt.id}>
+                <div className="flex justify-center">
+                  <CustomInput
+                    type="radio"
+                    id={opt.id}
+                    name="schedule-target"
+                    value={opt.id}
+                    label={opt.name}
+                    checked={target === opt.id}
+                    onChange={() => setTarget(opt.id)}
+                    selectedColor={opt.bg}
+                    selectedTextColor={opt.text}
+                    selectedBorderColor={opt.border || opt.bg}
+                  />
+                </div>
+                {index === 0 && (
+                  <>
+                    <div className="w-full" />
+                    <div className="w-full" />
+                  </>
+                )}
+              </React.Fragment>
             ))}
           </div>
         </FormItem>
