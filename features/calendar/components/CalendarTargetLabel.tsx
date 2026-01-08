@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { TARGET_CONFIG } from "@/features/calendar/constants/targetStyles";
 
 interface Props {

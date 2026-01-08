@@ -24,7 +24,6 @@ export const FormItem = ({
         )}
       </div>
       {children}
-      {/* 絶対配置(absolute)にすることで、エラーが出ても下の要素を動かさない */}
       {error && (
         <p className="absolute left-0 -bottom-[20px] text-[#C20000] text-[14px] font-normal leading-none whitespace-nowrap">
           {error}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { isBefore, startOfDay } from "date-fns";
 
@@ -12,7 +12,7 @@ import { SelectBox } from "@/components/SelectBox";
 
 // 定数・分離したモーダル
 import { TARGET_OPTIONS } from "@/features/calendar/constants/targetStyles";
-import ScheduleFormModal from "./ScheduleFormModal";
+import ScheduleFormModal from "@/features/schedules/components/ScheduleFormModal";
 
 export default function ScheduleForm() {
   const router = useRouter();
@@ -339,7 +339,7 @@ export default function ScheduleForm() {
           time,
           location,
           otherLocation,
-          target,
+          targetId: target,
           content,
         }}
       />

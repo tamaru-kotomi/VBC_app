@@ -7,11 +7,11 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  buttons?: React.ReactNode; // ボタンエリアを受け取るprops
+  buttons?: React.ReactNode;
 }
 
 export const Modal = ({ isOpen, onClose, children, buttons }: ModalProps) => {
-  // モーダル表示時に背景のスクロールを禁止する
+  // モーダル表示時背景のスクロールを禁止
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -48,18 +48,12 @@ export const Modal = ({ isOpen, onClose, children, buttons }: ModalProps) => {
           />
         </button>
 
-        {/* コンテンツエリア (クローズアイコンの24px下から開始) */}
-        <div className="mt-[92px] px-[12px] pb-[24px]">
-          {/* アイコン上24px + アイコン44px + 余白24px = 92px 
-            左右余白12px, 下余白24px
-          */}
-          {children}
-        </div>
+        {/* コンテンツエリア */}
+        <div className="mt-[92px] px-[12px] pb-[24px]">{children}</div>
 
-        {/* ボタンエリア (コンテンツから24px下) */}
+        {/* ボタンエリア*/}
         {buttons && (
           <div className="px-[12px] pb-[24px] flex justify-center gap-[24px]">
-            {/* 1つの時は中央、2つの時はgap 24pxで並ぶ */}
             {buttons}
           </div>
         )}

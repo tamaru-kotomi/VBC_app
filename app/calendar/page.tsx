@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
-import prisma from "../lib/prisma";
-import CalendarWrapper from "../../features/calendar/components/CalendarWrapper";
+import prisma from "@/app/lib/prisma";
+import CalendarWrapper from "@/features/calendar/components/CalendarWrapper";
 
 export default async function CalendarPage() {
   // 1. データベースから全予定を取得

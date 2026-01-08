@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import {
   format,
   isSameDay,
@@ -18,13 +17,13 @@ import {
   addMonths,
 } from "date-fns";
 import Image from "next/image";
-import Header from "../../../components/Header";
-import DetailTable from "./DetailTable";
-import { TargetLabel } from "../../../components/TargetLabel";
-import { Modal } from "../../../components/Modal";
-import Button from "../../../components/Button";
-import { Schedule } from "./CalendarWrapper";
-import { TARGET_CONFIG } from "../constants/targetStyles";
+import Header from "@/components/Header";
+import DetailTable from "@/features/calendar/components/DetailTable";
+import { TargetLabel } from "@/components/TargetLabel";
+import { Modal } from "@/components/Modal";
+import Button from "@/components/Button";
+import { Schedule } from "@/features/calendar/components/CalendarWrapper";
+import { TARGET_CONFIG } from "@/features/calendar/constants/targetStyles";
 
 interface CalendarProps {
   initialSchedules: Schedule[];
@@ -37,8 +36,6 @@ export default function Calendar({
   activeFilters,
   isAdmin,
 }: CalendarProps) {
-  const router = useRouter();
-
   // --- Hydration 対策 ---
   const [isMounted, setIsMounted] = useState(false);
 
@@ -80,7 +77,6 @@ export default function Calendar({
     return list.filter((s) => activeFilters.includes(s.targetId));
   };
 
-  // --- ハンドラー (window.location.assign に修正) ---
   const handleAddSchedule = () => {
     if (!selectedDay) return;
     const isPast = isBefore(startOfDay(selectedDay), today);
@@ -167,7 +163,7 @@ export default function Calendar({
                 ? "/images/icons/icon_prev.png"
                 : "/images/icons/icon_prev_gray.png"
             }
-            alt="前"
+            alt="前月"
             width={18}
             height={18}
           />
@@ -191,7 +187,7 @@ export default function Calendar({
                 ? "/images/icons/icon_next.png"
                 : "/images/icons/icon_next_gray.png"
             }
-            alt="次"
+            alt="次月"
             width={18}
             height={18}
           />

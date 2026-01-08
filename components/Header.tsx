@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import CustomInput from "./CustomInput";
-import Button from "./Button";
+import CustomInput from "@/components/CustomInput";
+import Button from "@/components/Button";
 import { TARGET_OPTIONS } from "@/features/calendar/constants/targetStyles";
 
 interface HeaderProps {
@@ -85,7 +85,7 @@ export default function Header({
             >
               <Image
                 src="/images/icons/icon_close_white.png"
-                alt="Close"
+                alt="閉じる"
                 width={44}
                 height={44}
               />
@@ -98,7 +98,7 @@ export default function Header({
             >
               <Image
                 src="/images/icons/icon_gear.png"
-                alt="Toggle Filter"
+                alt="表示フィルター設定"
                 width={44}
                 height={44}
               />
@@ -120,7 +120,6 @@ export default function Header({
               </p>
               <div className="flex justify-center w-full px-[8px] mt-[20px]">
                 <div className="grid grid-cols-[repeat(3,min-content)] w-full max-w-[375px] justify-center gap-x-[16px] gap-y-[12px]">
-                  {/* ★ TARGET_OPTIONS を使用 */}
                   {TARGET_OPTIONS.map((option, index) => (
                     <div
                       key={option.id}

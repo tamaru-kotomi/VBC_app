@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ChangeEvent } from "react";
+import { ChangeEvent } from "react";
 
 interface CommonInputProps {
   value: string;
@@ -17,11 +17,11 @@ export const CommonInput = ({
   placeholder,
   disabled,
   className = "",
-  type = "text", // デフォルトは text
+  type = "text",
 }: CommonInputProps) => {
   return (
     <input
-      type={type} // 指定された type を適用
+      type={type}
       disabled={disabled}
       placeholder={placeholder}
       value={value}
@@ -38,7 +38,6 @@ export const CommonInput = ({
         ${className}
       `}
       style={{
-        // iOS/Safariでdisabled時に文字が薄くなるのを防ぐ
         WebkitTextFillColor: disabled
           ? "#999999"
           : value === ""
