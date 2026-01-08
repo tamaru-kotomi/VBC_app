@@ -2,7 +2,7 @@ export const TARGET_CONFIG: Record<
   string,
   { name: string; bg: string; text: string; border?: string }
 > = {
-  ALL: { name: "ALL", bg: "#8BC34A", text: "#FFFFFF" },
+  all: { name: "ALL", bg: "#8BC34A", text: "#FFFFFF" },
   boys: { name: "男子", bg: "#3C2465", text: "#FFFFFF" },
   boysA: { name: "男子A", bg: "#673AB7", text: "#FFFFFF" },
   boysB: { name: "男子B", bg: "#FFFFFF", text: "#673AB7", border: "#673AB7" },

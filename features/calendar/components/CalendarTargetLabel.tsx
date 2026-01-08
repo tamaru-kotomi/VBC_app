@@ -8,7 +8,7 @@ interface Props {
 
 export const CalendarTargetLabel = ({ targetId }: Props) => {
   // ★ 共通設定からデータを取得。なければ ALL をデフォルトにする
-  const config = TARGET_CONFIG[targetId] || TARGET_CONFIG.ALL;
+  const config = TARGET_CONFIG[targetId] || TARGET_CONFIG.all;
 
   return (
     <div

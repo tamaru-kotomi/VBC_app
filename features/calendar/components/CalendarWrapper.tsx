@@ -25,7 +25,7 @@ export default function CalendarWrapper({
 }) {
   // 初期値：すべてのラベルを表示対象にする
   const [activeFilters, setActiveFilters] = useState<string[]>([
-    "ALL",
+    "all",
     "boys",
     "boysA",
     "boysB",

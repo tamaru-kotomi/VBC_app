@@ -23,7 +23,7 @@ export default function Header({
 }: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }>({
-    ALL: true,
+    all: true,
     boys: true,
     boysA: true,
     boysB: true,

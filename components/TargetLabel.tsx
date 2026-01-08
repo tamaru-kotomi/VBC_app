@@ -7,7 +7,7 @@ interface TargetLabelProps {
 }
 
 export const TargetLabel = ({ targetId }: TargetLabelProps) => {
-  const config = TARGET_CONFIG[targetId] || TARGET_CONFIG.ALL;
+  const config = TARGET_CONFIG[targetId] || TARGET_CONFIG.all;
 
   return (
     <div

@@ -235,7 +235,7 @@ export default function Calendar({
               <div className="mt-[24px] flex flex-col items-center">
                 {daySchedules.map((item) => {
                   const style =
-                    TARGET_CONFIG[item.targetId] || TARGET_CONFIG.ALL;
+                    TARGET_CONFIG[item.targetId] || TARGET_CONFIG.all;
                   return (
                     <div
                       key={item.id}

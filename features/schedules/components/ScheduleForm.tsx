@@ -35,7 +35,7 @@ export default function ScheduleForm() {
   const [otherLocation, setOtherLocation] = useState(
     searchParams.get("otherLocation") || ""
   );
-  const [target, setTarget] = useState(searchParams.get("target") || "ALL");
+  const [target, setTarget] = useState(searchParams.get("target") || "all");
   const [content, setContent] = useState(searchParams.get("content") || "");
 
   const [error, setError] = useState<string | null>(null);

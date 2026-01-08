@@ -9,13 +9,13 @@ datasource db {
 
 // 予定の対象者を定義する
 enum Target {
-  ALL
-  BOYS
-  BOYS_A
-  BOYS_B
-  GIRLS
-  GIRLS_A
-  GIRLS_B
+  all
+  boys
+  boysA
+  boysB
+  girls
+  girlsA
+  girlsB
 }
 
 model Schedule {
@@ -25,7 +25,7 @@ model Schedule {
   time          String?  
   location      String?  
   otherLocation String?  
-  targetId      String   @default("ALL") 
+  targetId      Target   @default(all)
   content       String?  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

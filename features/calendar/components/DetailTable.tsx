@@ -20,7 +20,7 @@ export default function DetailTable({
   maxHeight = "none",
 }: DetailTableProps) {
   // ★ 共通定数から取得
-  const config = TARGET_CONFIG[targetId] || TARGET_CONFIG.ALL;
+  const config = TARGET_CONFIG[targetId] || TARGET_CONFIG.all;
 
   return (
     <div
