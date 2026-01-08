@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/lib/prisma";
+import { Target } from "@prisma/client";
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
       time: time || null,
       location: location || null,
       otherLocation: otherLocation || null,
-      targetId: target,
+      targetId: target as Target,
       content: content || null,
     };
 

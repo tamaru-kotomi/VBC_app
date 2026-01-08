@@ -2,6 +2,7 @@
 
 import React from "react";
 import { TARGET_CONFIG } from "@/features/calendar/constants/targetStyles";
+import { Target } from "@prisma/client";
 
 interface DetailItem {
   label: string;
@@ -10,7 +11,7 @@ interface DetailItem {
 
 interface DetailTableProps {
   items: DetailItem[];
-  targetId: string;
+  targetId: Target;
   maxHeight?: string;
 }
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { TARGET_CONFIG } from "@/features/calendar/constants/targetStyles";
+import { Target } from "@prisma/client";
 
 interface TargetLabelProps {
-  targetId: string;
+  targetId: Target;
 }
 
 export const TargetLabel = ({ targetId }: TargetLabelProps) => {

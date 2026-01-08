@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import Calendar from "@/features/calendar/components/Calendar";
+import { Target } from "@prisma/client";
 
 // 共通のスケジュール型
 export interface Schedule {
@@ -12,7 +13,7 @@ export interface Schedule {
   time?: string | null;
   location?: string | null;
   otherLocation?: string | null;
-  targetId: string;
+  targetId: Target;
   content?: string | null;
 }
 
