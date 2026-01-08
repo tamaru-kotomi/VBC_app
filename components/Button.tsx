@@ -17,11 +17,11 @@ export default function Button({
   activeBgColor = "#090C26",
   activeTextColor = "#ffffff",
   className = "",
-  type = "button", // デフォルトは button
+  type = "button",
 }: ButtonProps) {
   return (
     <button
-      type={type} // 渡された type を適用
+      type={type}
       onClick={onClick}
       disabled={disabled}
       className={`

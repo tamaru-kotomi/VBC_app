@@ -339,7 +339,7 @@ export default function ScheduleForm() {
           time,
           location,
           otherLocation,
-          target,
+          targetId: target,
           content,
         }}
       />
