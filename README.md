@@ -1,4 +1,3 @@
-cat << 'EOF' > README.md
 # ジュニアバレーボール・スケジュール管理アプリ
 
 ジュニアバレーボールチーム（男子・女子・混合）の練習・試合予定を共有・管理するためのWebアプリです。
@@ -10,40 +9,34 @@ cat << 'EOF' > README.md
 - **Auth:** NextAuth.js (Credentials Provider)
 - **Database:** PostgreSQL (Neon)
 - **ORM:** Prisma
-- **Validation:** Zod
 - **Styling:** Tailwind CSS
 - **Date Handling:** date-fns
 
-## 📂 ディレクトリ構成
-```text
-app/
-├── (root)/          # 公開トップページ
-├── (auth)/          # ログイン関連（layout.tsx, login/page.tsx）
-├── (schedule)/      # メイン機能（カレンダー表示、予定登録）
-├── api/             # NextAuth 認証エンドポイント
-components/          # 再利用可能なUI部品（Calendar, Forms等）
-lib/                 # 共通ロジック（Prisma設定, Auth設定, バリデーション）
-prisma/              # DBスキーマ定義
-```
 
 ## 🗄️ データ設計概要
 ### User (ユーザー)
 | 項目           | 物理名      | 型          | 制約         | 説明                                  |
 |---------------|------------|-------------|-------------|---------------------------------------|
+| ID            | id         | String     | PK.          | レコード識別用のユニークID              |
 | メールアドレス   | email      | String     | PK.          | ログイン用ID                           |
-| 名前           | name       | String     | Not Null     | 画面表示用                             |
-| 学年           | grade.     | Int        | Not Null     | 1〜6年生 (Check 1-6)                  |
+| パスワード       | password  | String     | Not Null     | 画面表示用                             |
+| 学年           | grades     | Int[]       | Not Null     | 1〜6年生 (Check 1-6)                  |
 | 管理者フラグ    | isAdmin    | Boolean     | -            | Default:false / true: 父母会長（登録可）|
+| 作成日         | createdAt  | DateTime        | -            | アカウント作成した日                    |
 
 ### Schedule (スケジュール)
-| 項目           | 物理名      | 型          | 制約         | 説明                                  |
-|---------------|------------|-------------|-------------|---------------------------------------|
-| ID	        | id	     | Int	       | PK, 採番	  | 自動採番                              |
-| 日付	         | date	      | DateTime	| Not Null	  | 予定日                                |
-| タイトル	      | title	   | String	     | Not Null	   | 練習、練習試合、大会等                 |
-| 時間	         | time	      | String	    | -	          | 例：「9:00 - 12:00」                  |
-| 場所	         | location	  | String	    | Not Null	  | 体育館名など                           |
-| 対象	         | target	  | Enum	    | Not Null	  | ALL, 男子, 女子A 等                   |
+| 項目           | 物理名        | 型          | 制約         | 説明                                  |
+|---------------|--------------|-------------|-------------|---------------------------------------|
+| ID	          | id	         | String      | Not Null    |  レコード識別用のユニークID。             |
+| 日付	         | date	         | DateTime	   | Not Null	   | 予定日                                |
+| タイトル	      | title	       | String	     | Not Null	   | 練習、練習試合、大会等                   |
+| 時間	         | time	         | String?	   | -	         | 例：「9:00 - 12:00」                   |
+| 場所	         | location	     | String?	   | -	         | 体育館名など                            |
+| その他場所	   | otherLocation | String?	   | -	         | 体育館名など                            |
+| 対象	         | targetId	     | Enum　Target | Not Null	 | ALL, 男子, 女子A 等                    |
+| 内容・連絡事項  | content	     | String?	   | -	         | 持ち物や注意事項などの詳細テキスト。       |
+| 作成日         | createdAt    | DateTime    | -           | 予定追加した日                         |
+| 編集日         | updatedAt    | DateTime    | -           | 予定編集した日                         |
 
 ## 📐 デザインガイドライン (SP優先)
 - ヘッダー高さ: 120px
