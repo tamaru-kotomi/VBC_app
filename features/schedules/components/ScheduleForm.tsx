@@ -13,6 +13,7 @@ import { SelectBox } from "@/components/SelectBox";
 // 定数・分離したモーダル
 import { TARGET_OPTIONS } from "@/features/calendar/constants/targetStyles";
 import ScheduleFormModal from "@/features/schedules/components/ScheduleFormModal";
+import { Target } from "@prisma/client";
 
 export default function ScheduleForm() {
   const router = useRouter();
@@ -340,7 +341,7 @@ export default function ScheduleForm() {
           time,
           location,
           otherLocation,
-          targetId: target,
+          targetId: target as Target,
           content,
         }}
       />
