@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import prisma from "@/app/lib/prisma";
 import CalendarWrapper from "@/features/calendar/components/CalendarWrapper";
+import Logout from "@/components/Logout";
 
 export default async function CalendarPage() {
   // 1. データベースから全予定を取得
@@ -18,6 +19,9 @@ export default async function CalendarPage() {
         initialSchedules={schedules}
         isAdmin={!!session?.user?.isAdmin}
       />
+      <div className="pb-[36px] w-full flex justify-center">
+        <Logout />
+      </div>
     </div>
   );
 }
